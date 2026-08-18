@@ -3,165 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ISP BILLING - OWNER CENTER</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Billing ISP Owner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Sambungan ke file CSS kita -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Library Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { 
-            --navy-dark: #0f172a; --navy-light: #1e293b; --cyan-accent: #38bdf8; --cyan-hover: #0ea5e9;
-            --bg-body: #f1f5f9; --card-bg: #FFFFFF; --text-main: #334155; --text-muted: #94a3b8; 
-            --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --border-color: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); --border-rad: 12px;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg-body); color: var(--text-main); }
-        
-        .screen { display: none; height: 100vh; width: 100vw; overflow: hidden; flex-direction: column; position: fixed; top:0; left:0; background: var(--bg-body); z-index: 1;}
-        .screen.active { display: flex; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-
-        /* HEADER & DASHBOARD */
-        .app-header { background: var(--navy-dark); color: white; padding: 25px 20px 40px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-shrink: 0;}
-        .greeting h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; color: white;}
-        .greeting p { font-size: 12px; color: var(--cyan-accent); }
-        .btn-logout { background: rgba(255, 255, 255, 0.1); color: white; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; }
-        .app-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; margin-top: -25px; z-index: 11; position: relative;}
-        .view { display: none; animation: fadeIn 0.3s; }
-        .view.active { display: block; }
-        .finance-card { background: linear-gradient(135deg, var(--cyan-hover) 0%, var(--navy-light) 100%); color: white; padding: 20px; border-radius: var(--border-rad); box-shadow: var(--shadow); margin-bottom: 20px; }
-        .finance-card span { font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px; opacity: 0.9;}
-        .finance-card h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px;}
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px;}
-        .stat-card { background: var(--card-bg); padding: 18px; border-radius: var(--border-rad); box-shadow: var(--shadow); display: flex; flex-direction: column;}
-        .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
-        .stat-card h3 { font-size: 24px; font-weight: 800; color: var(--navy-dark); }
-        .stat-card.success h3 { color: var(--success); }
-        .stat-card.danger h3 { color: var(--danger); }
-
-        /* LIST CARDS */
-        .section-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--navy-dark); }
-        .search-bar { background: var(--card-bg); padding: 15px; border-radius: 12px; border: none; box-shadow: var(--shadow); width: 100%; font-size: 14px; margin-bottom: 15px; outline: none; }
-        .data-card { background: var(--card-bg); padding: 18px; border-radius: var(--border-rad); margin-bottom: 12px; box-shadow: var(--shadow); border-left: 4px solid var(--success); cursor: pointer;}
-        .data-card.isolated { border-left-color: var(--danger); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .card-title { font-size: 15px; font-weight: 700; color: var(--navy-dark); }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
-        .badge.active { background: #dcfce7; color: var(--success); }
-        .badge.isolated { background: #fee2e2; color: var(--danger); }
-        .card-details p { font-size: 12px; color: var(--text-muted); margin-bottom: 4px;}
-        .card-details span { color: var(--text-main); font-weight: 600; }
-
-        /* DETAIL SCREEN */
-        #detail-screen { background: #f8fafc; z-index: 100;}
-        .profile-header { background: var(--navy-dark); color: white; padding: 20px; padding-top: 40px; }
-        .profile-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;}
-        .btn-back { background: none; border: none; color: white; font-size: 24px; cursor: pointer;}
-        .profile-info { display: flex; align-items: center; gap: 15px; margin-bottom: 25px;}
-        .avatar { width: 60px; height: 60px; border-radius: 50%; background: #cbd5e1; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--navy-dark);}
-        .profile-text h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px;}
-        .profile-text p { font-size: 13px; color: var(--cyan-accent); margin-bottom: 4px;}
-        .id-badge { background: var(--cyan-hover); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; display: inline-block;}
-        
-        .profile-tabs { display: flex; justify-content: space-between; background: white; padding: 0 10px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10;}
-        .tab-item { padding: 15px 20px; font-size: 12px; font-weight: 700; color: var(--text-muted); border-bottom: 3px solid transparent; cursor: pointer; flex: 1; text-align: center;}
-        .tab-item.active { color: var(--cyan-hover); border-bottom-color: var(--cyan-hover); }
-
-        .detail-content { padding: 15px; overflow-y: auto; flex: 1; padding-bottom: 90px;}
-        .tab-pane { display: none; animation: fadeIn 0.2s; }
-        .tab-pane.active { display: block; }
-
-        .status-banner { background: var(--success); color: white; padding: 15px; border-radius: var(--border-rad); text-align: center; font-weight: 700; font-size: 14px; margin-bottom: 15px;}
-        .status-banner.danger { background: var(--danger); }
-        .detail-card { background: white; border-radius: var(--border-rad); padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); }
-        .detail-card h3 { font-size: 15px; font-weight: 700; color: var(--navy-dark); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;}
-        .data-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px;}
-        .data-row.col { flex-direction: column; gap: 5px; }
-        .data-label { color: var(--text-muted); font-weight: 600; font-size: 12px;}
-        .data-value { color: var(--text-main); font-weight: 500; }
-        .data-highlight { background: var(--danger); color: white; padding: 8px 12px; border-radius: 8px; font-weight: 700; display: inline-flex;}
-        
-        .mikrotik-box { border: 1px solid var(--cyan-hover); border-radius: 10px; padding: 12px; margin-bottom: 15px;}
-        .btn-action-lg { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; text-align: center; width: 100%; display: block; margin-top: 10px;}
-        
-        /* INVOICE CARD */
-        .invoice-card { border: 1px dashed var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 10px;}
-        .invoice-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 700;}
-
-        /* BOTTOM NAV */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 12px 10px; padding-bottom: env(safe-area-inset-bottom, 15px); border-top: 1px solid var(--border-color); z-index: 999;}
-        .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 10px; font-weight: 600; cursor: pointer;}
-        .nav-item.active { color: var(--cyan-hover); }
-        .nav-item .icon { font-size: 20px; }
-
-        /* MODALS */
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.8); z-index: 1000; align-items: flex-end; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: var(--bg-body); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px;}
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 12px; margin-bottom: 6px; font-weight: 600;}
-        .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; outline: none;}
-        .btn-save { background: var(--navy-dark); color: white; padding: 15px; border: none; width: 100%; border-radius: 10px; font-weight: 700; margin-top: 10px;}
-        .floating-add { position: fixed; bottom: 80px; right: 20px; background: var(--navy-dark); color: white; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: none; z-index: 99;}
-    </style>
 </head>
 <body>
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="screen active" style="justify-content: center; align-items: center; background: var(--navy-dark);">
-        <div style="background: var(--navy-light); padding: 40px; border-radius: 16px; text-align: center; color: white; width: 90%; max-width: 350px;">
-            <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 20px;">NET<span style="color:var(--cyan-accent)">//</span>BILLING</h1>
+
+    <!-- ================= LAYAR LOGIN ================= -->
+    <div id="login-screen" class="screen active">
+        <div class="login-box">
+            <h1>NET BILLING</h1>
+            <p>Owner Dashboard</p>
             <form id="login-form">
-                <input type="text" id="username" placeholder="Username" required style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border:none;">
-                <input type="password" id="password" placeholder="Password" required style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border:none;">
-                <button type="submit" style="width: 100%; padding: 15px; background: var(--cyan-accent); border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">LOGIN</button>
+                <input type="text" id="username" placeholder="Username" required autocomplete="off">
+                <input type="password" id="password" placeholder="Password" required autocomplete="off">
+                <button type="submit" class="btn-primary">LOGIN</button>
             </form>
-            <p id="pesan-error" style="color: var(--danger); font-size: 12px; margin-top: 15px; display: none; font-weight: 600;">Username atau Password salah!</p>
+            <p id="pesan-error" class="error-msg">Username atau Password salah!</p>
         </div>
     </div>
 
-    <!-- MAIN APP SCREEN -->
+    <!-- ================= LAYAR UTAMA (DASHBOARD) ================= -->
     <div id="app-screen" class="screen">
         <header class="app-header">
-            <div class="greeting"><h2>Beranda Owner</h2><p id="realtime-clock">Memuat...</p></div>
-            <button class="btn-logout" id="btn-logout">Keluar</button>
+            <div>
+                <h2 style="color: white; font-size:18px;">Dashboard Owner</h2>
+                <p id="realtime-clock" style="color: #64FFDA; font-size:12px;">Memuat...</p>
+            </div>
+            <button id="btn-logout" class="btn-logout">Keluar</button>
         </header>
+
         <main class="app-content">
-            <section id="view-dashboard" class="view active">
+            <div id="view-dashboard" class="view active">
                 <div class="finance-card">
-                    <span>Pendapatan Bulan Ini</span>
+                    <p style="font-size:12px; opacity:0.9;">Pendapatan Bulan Ini</p>
                     <h1 id="dashboard-income">Rp 0</h1>
                 </div>
+                
+                <h3 class="section-title">Ringkasan Sistem</h3>
                 <div class="stats-grid">
-                    <div class="stat-card"><span class="stat-label">Total Pelanggan</span><h3 id="stat-total">0</h3></div>
-                    <div class="stat-card success"><span class="stat-label">Aktif</span><h3 id="stat-active">0</h3></div>
-                    <div class="stat-card danger"><span class="stat-label">Terisolir</span><h3 id="stat-isolated">0</h3></div>
+                    <div class="stat-card">
+                        <span>Total Pelanggan</span><h3 id="stat-total">0</h3>
+                    </div>
+                    <div class="stat-card" style="color: var(--success);">
+                        <span>Aktif</span><h3 id="stat-active">0</h3>
+                    </div>
+                    <div class="stat-card" style="color: var(--danger);">
+                        <span>Terisolir</span><h3 id="stat-isolated">0</h3>
+                    </div>
                 </div>
-            </section>
-            <section id="view-customers" class="view">
-                <input type="text" class="search-bar" id="search-customer" placeholder="Cari Pelanggan...">
+            </div>
+
+            <div id="view-customers" class="view">
+                <input type="text" id="search-customer" class="search-bar" placeholder="Cari pelanggan...">
                 <div id="customer-list"></div>
-                <button class="floating-add" onclick="openModal('modal-form')">+</button>
-            </section>
+                <button class="fab-add" onclick="openModal('modal-form')">+</button>
+            </div>
         </main>
+
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="switchView('view-dashboard', this)"><span class="icon">🏠</span>Home</button>
-            <button class="nav-item" onclick="switchView('view-customers', this)"><span class="icon">👥</span>Pelanggan</button>
+            <button class="nav-item active" onclick="switchView('view-dashboard', this)"><span>🏠</span>Home</button>
+            <button class="nav-item" onclick="switchView('view-customers', this)"><span>👥</span>Pelanggan</button>
         </nav>
     </div>
 
-    <!-- PROFILE DETAIL SCREEN -->
-    <div id="detail-screen" class="screen">
+    <!-- ================= LAYAR DETAIL PELANGGAN (SESUAI GAMBAR) ================= -->
+    <div id="detail-screen" class="screen" style="background: #F4F7FE;">
         <div class="profile-header">
             <div class="profile-nav">
                 <button class="btn-back" onclick="closeDetailScreen()">←</button>
+                <div style="font-size:12px;">Tambahkan Foto Rumah Mungkin ?</div>
+                <div>🖼️ ⬛</div>
             </div>
             <div class="profile-info">
                 <div class="avatar" id="det-avatar">A</div>
-                <div class="profile-text">
+                <div>
                     <h2 id="det-name">-</h2>
-                    <p>📞 <span id="det-phone">-</span></p>
-                    <div class="id-badge">ID pel : <span id="det-id">-</span></div>
+                    <p style="color: #64FFDA; font-size: 13px; margin: 4px 0;">📞 <span id="det-phone">-</span></p>
+                    <span class="id-badge">ID pel : <span id="det-id">-</span></span>
                 </div>
             </div>
         </div>
@@ -173,392 +97,102 @@
         </div>
 
         <div class="detail-content">
-            <!-- TAB 1: DETAIL -->
+            <!-- TAB DETAIL -->
             <div id="tab-detail" class="tab-pane active">
                 <div id="det-status-banner" class="status-banner">Memuat...</div>
                 
                 <div class="detail-card">
-                    <h3>Rincian Data <span style="cursor:pointer;" onclick="openEditModal()">✏️ Edit</span></h3>
-                    <div class="data-row col"><span class="data-label">Tanggal Daftar</span><span class="data-value" id="det-reg">-</span></div>
-                    <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div class="data-row col"><span class="data-label">Tagihan Setiap Tanggal</span><span class="data-value" id="det-due">-</span></div>
-                        <div class="data-highlight">Tgl Isolir: <span id="det-iso-date" style="margin-left:5px; font-size:16px;">-</span></div>
+                    <div class="card-title">Rincian Data <span style="font-size:12px; font-weight:normal; color:#0ea5e9; cursor:pointer;" onclick="openEditModal()">✏️ Edit</span></div>
+                    <div class="data-group">
+                        <span class="data-label">Tanggal Daftar</span>
+                        <span class="data-value" id="det-reg">-</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
+                        <div class="data-group">
+                            <span class="data-label">Tagihan Setiap Tanggal</span>
+                            <span class="data-value" id="det-due">-</span>
+                        </div>
+                        <div class="box-merah">
+                            <span style="font-size:10px;">Tanggal Isolir</span>
+                            <span id="det-iso-date" style="font-size:16px; font-weight:bold;">-</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="detail-card">
-                    <h3>Rincian Biaya</h3>
-                    <div class="data-row"><span class="data-value" id="det-pack">-</span><span class="data-value" id="det-price">Rp 0</span></div>
-                    <div class="data-row" style="margin-top:10px; font-weight:700;"><span class="data-value">Total Biaya Perbulan</span><span class="data-value" style="color:var(--cyan-hover);" id="det-total">Rp 0</span></div>
+                    <div class="card-title">Rincian Biaya</div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span class="data-label" id="det-pack">-</span>
+                        <span class="data-value" id="det-price">Rp 0</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+                        <span class="data-label" style="font-weight:bold; color:#333;">Total Biaya Perbulan</span>
+                        <span class="data-value" style="color:#0ea5e9; font-weight:bold;" id="det-total">Rp 0</span>
+                    </div>
                 </div>
 
                 <div class="detail-card">
-                    <h3>Rincian Jaringan <span style="font-size:12px; color:var(--text-muted); cursor:pointer;" onclick="fetchMikrotikLive()">↻ Refresh Live</span></h3>
+                    <div class="card-title">Rincian Jaringan <span style="font-size:12px; font-weight:normal; cursor:pointer; color:#0ea5e9;" onclick="fetchMikrotikLive()">↻ Refresh</span></div>
                     <div class="mikrotik-box">
-                        <div style="color:var(--cyan-hover); font-weight:700; margin-bottom:10px;">🛜 Mikrotik Secret</div>
-                        <div class="data-row"><span class="data-label">Remote Address</span><span class="data-value" id="det-ip">Loading...</span></div>
-                        <div class="data-row"><span class="data-label">Uptime</span><span class="data-value" id="det-uptime" style="color:var(--success); font-weight:700;">Loading...</span></div>
-                        <div class="data-row"><span class="data-label">Last Logged Out</span><span class="data-value" id="det-last-logout">Loading...</span></div>
+                        <div style="color:#0ea5e9; font-weight:bold; margin-bottom:10px;">🛜 Mikrotik Secret</div>
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
+                            <span>Remote Address:</span><span id="det-ip">Loading...</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
+                            <span>Uptime:</span><span id="det-uptime" style="font-weight:bold; color:var(--success);">Loading...</span>
+                        </div>
                     </div>
-                    <div class="data-row col"><span class="data-label">Username PPPoE</span><span class="data-value" id="det-pppoe">-</span></div>
+                    <div class="data-group" style="margin-top:10px;">
+                        <span class="data-label">Username PPPoE</span>
+                        <span class="data-value" id="det-pppoe">-</span>
+                    </div>
                 </div>
-                
-                <button class="btn-action-lg" id="btn-det-isolir" style="background:var(--danger); color:white;"></button>
+
+                <button id="btn-det-isolir" class="btn-full"></button>
             </div>
 
-            <!-- TAB 2: BULAN (RIWAYAT) -->
+            <!-- TAB BULAN -->
             <div id="tab-bulan" class="tab-pane">
                 <div class="detail-card">
-                    <h3>Histori Berlangganan</h3>
-                    <div class="data-row col"><span class="data-label">Tercatat Sejak</span><span class="data-value" id="histori-reg">-</span></div>
-                    <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0;">
-                    <h4>Bulan Lunas:</h4>
-                    <div id="histori-list" style="margin-top:10px;"></div>
+                    <div class="card-title">Histori Pembayaran</div>
+                    <div id="histori-list"></div>
                 </div>
             </div>
 
-            <!-- TAB 3: BAYAR (INVOICE) -->
+            <!-- TAB BAYAR -->
             <div id="tab-bayar" class="tab-pane">
                 <div class="detail-card">
-                    <h3>Tagihan Saat Ini</h3>
-                    <div class="invoice-card" id="invoice-current">
-                        <!-- Render by JS -->
-                    </div>
-                    <button class="btn-action-lg" style="background:var(--success); color:white;" onclick="prosesPelunasan()">✅ LUNASKAN BULAN INI</button>
+                    <div class="card-title">Tagihan Saat Ini</div>
+                    <div id="invoice-current" style="margin-bottom:15px;"></div>
+                    <button class="btn-full" style="background:var(--success);" onclick="prosesPelunasan()">✅ LUNASKAN BULAN INI</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL ADD/EDIT -->
+    <!-- ================= MODAL TAMBAH/EDIT ================= -->
     <div id="modal-form" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h3 id="form-title">Tambah Pelanggan</h3><div class="close-modal" onclick="closeModal('modal-form')">&times;</div></div>
+            <h3 id="form-title" style="margin-bottom:15px;">Form Pelanggan</h3>
             <form id="customer-form">
                 <input type="hidden" id="form-id">
-                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required></div>
-                <div class="form-group"><label>WA (Awali 62)</label><input type="number" id="cust-phone" required></div>
-                <div class="form-group"><label>Paket Internet</label><input type="text" id="cust-package" required></div>
-                <div class="form-group"><label>Harga Bulanan</label><input type="number" id="cust-price" required></div>
-                <div class="form-group"><label>Username PPPoE</label><input type="text" id="cust-user" required></div>
-                <div class="form-group"><label>Password PPPoE</label><input type="text" id="cust-pass" required></div>
-                <div class="form-group"><label>Tgl Jatuh Tempo (1-31)</label><input type="number" id="cust-due" min="1" max="31" required></div>
-                <button type="submit" id="btn-save-cust" class="btn-save">SIMPAN DATA</button>
+                <div class="input-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required></div>
+                <div class="input-group"><label>WA (Awali 62)</label><input type="number" id="cust-phone" required></div>
+                <div class="input-group"><label>Paket Internet</label><input type="text" id="cust-package" required></div>
+                <div class="input-group"><label>Harga Bulanan</label><input type="number" id="cust-price" required></div>
+                <div class="input-group"><label>Username PPPoE</label><input type="text" id="cust-user" required></div>
+                <div class="input-group"><label>Password PPPoE</label><input type="text" id="cust-pass" required></div>
+                <div class="input-group"><label>Tgl Jatuh Tempo (1-31)</label><input type="number" id="cust-due" min="1" max="31" required></div>
+                
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button type="button" class="btn-full" style="background:#94a3b8; flex:1;" onclick="closeModal('modal-form')">Batal</button>
+                    <button type="submit" id="btn-save-cust" class="btn-full" style="flex:2;">SIMPAN</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <script>
-        // KREDENSIAL SUPABASE
-        var SUPABASE_URL = 'https://vljvulbjxhuysesronog.supabase.co';
-        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsanZ1bGJqeGh1eXNlc3Jvbm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMjgyOTcsImV4cCI6MjEwMjYwNDI5N30.yPq1kySc9iPuOdS_eCWGRc60gUoklNqc2YRLQ7ILCIk';
-        if (typeof window.supabaseClient === 'undefined') { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
-        var db = window.supabaseClient;
-        
-        var globalCustomers = [];
-        var globalPayments = [];
-        var activeCust = null;
-
-        // TANGGAL REALTIME
-        setInterval(() => {
-            document.getElementById('realtime-clock').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
-        }, 1000);
-
-        // ==========================================
-        // FITUR BARU: AUTO-LOGIN (REMEMBER ME)
-        // ==========================================
-        document.addEventListener("DOMContentLoaded", function() {
-            // Cek apakah browser masih ingat status login kita
-            if (localStorage.getItem("isLoggedIn") === "true") {
-                document.getElementById('login-screen').classList.remove('active');
-                document.getElementById('app-screen').classList.add('active');
-                initData();
-            }
-        });
-
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (document.getElementById('username').value === "admin" && document.getElementById('password').value === "1234") {
-                
-                // Simpan Sesi Login ke Browser
-                localStorage.setItem("isLoggedIn", "true"); 
-
-                document.getElementById('login-screen').classList.remove('active');
-                document.getElementById('app-screen').classList.add('active');
-                initData(); 
-            } else {
-                document.getElementById('pesan-error').style.display = 'block';
-            }
-        });
-
-        // FUNGSI LOGOUT (Hapus Ingatan Sesi)
-        document.getElementById('btn-logout').addEventListener('click', function() { 
-            localStorage.removeItem("isLoggedIn");
-            window.location.reload(); 
-        });
-        // ==========================================
-
-        function switchView(id, btn) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            btn.classList.add('active');
-        }
-
-        function switchTab(id, btn) {
-            document.querySelectorAll('.tab-pane').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            btn.classList.add('active');
-        }
-
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        async function initData() {
-            await Promise.all([loadCustomers(), loadPayments()]);
-            calcDashboard();
-        }
-
-        async function loadCustomers() {
-            var list = document.getElementById('customer-list');
-            var { data } = await db.from('customers').select('*').order('created_at', { ascending: false });
-            globalCustomers = data || [];
-            list.innerHTML = '';
-            
-            globalCustomers.forEach(cust => {
-                var isIso = cust.isolation_status === 'ISOLATED';
-                list.innerHTML += `
-                    <div class="data-card ${isIso ? 'isolated' : ''}" onclick="openDetail('${cust.id}')">
-                        <div class="card-header">
-                            <h4 class="card-title">${cust.name}</h4>
-                            <span class="badge ${isIso ? 'isolated' : 'active'}">${isIso ? 'TERISOLIR' : 'AKTIF'}</span>
-                        </div>
-                        <div class="card-details">
-                            <p>Paket: <span>${cust.packname || '-'}</span></p>
-                            <p>PPPoE: <span>${cust.pppoe_username}</span></p>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        async function loadPayments() {
-            var { data } = await db.from('payments').select('*');
-            globalPayments = data || [];
-        }
-
-        function calcDashboard() {
-            var tAct = 0, tIso = 0;
-            globalCustomers.forEach(c => c.isolation_status === 'ISOLATED' ? tIso++ : tAct++);
-            document.getElementById('stat-total').innerText = globalCustomers.length;
-            document.getElementById('stat-active').innerText = tAct;
-            document.getElementById('stat-isolated').innerText = tIso;
-
-            var currMonth = new Date().getMonth();
-            var income = 0;
-            globalPayments.forEach(p => { if(new Date(p.created_at).getMonth() === currMonth) income += parseFloat(p.amount); });
-            document.getElementById('dashboard-income').innerText = "Rp " + income.toLocaleString('id-ID');
-        }
-
-        // ============================
-        // LAYAR DETAIL & TABS
-        // ============================
-        function openDetail(id) {
-            activeCust = globalCustomers.find(c => c.id === id);
-            if(!activeCust) return;
-            
-            // Header
-            document.getElementById('det-avatar').innerText = activeCust.name.charAt(0).toUpperCase();
-            document.getElementById('det-name').innerText = activeCust.name;
-            document.getElementById('det-phone').innerText = activeCust.phone || '-';
-            document.getElementById('det-id').innerText = "0489" + activeCust.id.substring(0,4).replace(/\D/g,'') || "2185";
-            
-            // Tab 1: Detail
-            var isIso = activeCust.isolation_status === 'ISOLATED';
-            var banner = document.getElementById('det-status-banner');
-            banner.className = isIso ? 'status-banner danger' : 'status-banner';
-            banner.innerText = isIso ? '⚠ TERISOLIR - Belum Bayar' : '✓ Tidak ada Tagihan';
-
-            document.getElementById('det-reg').innerText = new Date(activeCust.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
-            document.getElementById('det-due').innerText = String(activeCust.due_date).padStart(2, '0');
-            document.getElementById('det-iso-date').innerText = String(activeCust.due_date).padStart(2, '0');
-            
-            var harga = activeCust.harga || 0;
-            var hargaStr = "Rp " + harga.toLocaleString('id-ID');
-            document.getElementById('det-pack').innerText = activeCust.packname || '-';
-            document.getElementById('det-price').innerText = hargaStr;
-            document.getElementById('det-total').innerText = hargaStr;
-            document.getElementById('det-pppoe').innerText = activeCust.pppoe_username;
-
-            var btnIso = document.getElementById('btn-det-isolir');
-            btnIso.innerText = isIso ? "⚡ BUKA ISOLIR" : "🚫 ISOLIR PELANGGAN";
-            btnIso.style.background = isIso ? "var(--success)" : "var(--danger)";
-            btnIso.onclick = () => eksekusiMikrotik(activeCust.id, activeCust.pppoe_username, !isIso);
-
-            // Fetch Live MikroTik
-            fetchMikrotikLive();
-
-            // Tab 2 & 3: Riwayat & Invoice
-            renderBulanBayar(hargaStr);
-
-            // Buka Layar
-            document.getElementById('detail-screen').classList.add('active');
-            // Reset tab ke Detail
-            document.querySelectorAll('.tab-item')[0].click();
-        }
-
-        function closeDetailScreen() { document.getElementById('detail-screen').classList.remove('active'); activeCust = null;}
-
-        // ============================
-        // LIVE MIKROTIK (EDGE FUNCTION)
-        // ============================
-        async function fetchMikrotikLive() {
-            if(!activeCust) return;
-            document.getElementById('det-ip').innerText = "Loading...";
-            document.getElementById('det-uptime').innerText = "Loading...";
-            document.getElementById('det-last-logout').innerText = "Loading...";
-            
-            try {
-                const res = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-                    body: JSON.stringify({ pppoe_username: activeCust.pppoe_username, action: 'CHECK_STATUS' })
-                });
-                const data = await res.json();
-                
-                if(data.success) {
-                    document.getElementById('det-ip').innerText = data.ipAddress;
-                    document.getElementById('det-last-logout').innerText = data.lastLoggedOut;
-                    if(data.isOnline) {
-                        document.getElementById('det-uptime').innerText = data.uptime;
-                        document.getElementById('det-uptime').style.color = 'var(--success)';
-                    } else {
-                        document.getElementById('det-uptime').innerText = "Offline";
-                        document.getElementById('det-uptime').style.color = 'var(--danger)';
-                    }
-                } else {
-                    throw new Error("Gagal ambil data");
-                }
-            } catch(e) {
-                document.getElementById('det-ip').innerText = "-";
-                document.getElementById('det-uptime').innerText = "Gagal Konek";
-                document.getElementById('det-last-logout').innerText = "-";
-            }
-        }
-
-        // ============================
-        // TAB BULAN & BAYAR
-        // ============================
-        function renderBulanBayar(hargaStr) {
-            document.getElementById('histori-reg').innerText = new Date(activeCust.created_at).toLocaleDateString('id-ID', {month:'long', year:'numeric'});
-            
-            // Filter pembayaran milik pelanggan ini
-            var custPays = globalPayments.filter(p => p.customer_id === activeCust.id);
-            var listBulan = document.getElementById('histori-list');
-            listBulan.innerHTML = '';
-            
-            if(custPays.length === 0) {
-                listBulan.innerHTML = '<span style="color:var(--danger); font-size:12px;">Belum ada riwayat pembayaran</span>';
-            } else {
-                custPays.forEach(p => {
-                    var d = new Date(p.created_at);
-                    listBulan.innerHTML += `<div style="background:var(--bg-body); padding:10px; margin-bottom:5px; border-radius:8px; font-size:13px; display:flex; justify-content:space-between;">
-                        <span>✅ ${d.toLocaleDateString('id-ID', {month:'long', year:'numeric'})}</span>
-                        <span style="font-weight:bold; color:var(--success);">Lunas</span>
-                    </div>`;
-                });
-            }
-
-            // Tab Bayar (Invoice Bulan Ini)
-            var curMonth = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
-            var isLunas = custPays.some(p => new Date(p.created_at).getMonth() === new Date().getMonth());
-            
-            var invHtml = `
-                <div class="invoice-header"><span>Tagihan ${curMonth}</span> <span style="color:${isLunas ? 'var(--success)' : 'var(--danger)'}">${isLunas ? 'LUNAS' : 'BELUM BAYAR'}</span></div>
-                <div class="data-row"><span class="data-label">Nama</span><span class="data-value">${activeCust.name}</span></div>
-                <div class="data-row"><span class="data-label">Paket</span><span class="data-value">${activeCust.packname}</span></div>
-                <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0;">
-                <div class="data-row"><span class="data-label" style="font-size:16px;">Total</span><span class="data-value" style="font-size:16px; font-weight:800; color:var(--cyan-hover);">${hargaStr}</span></div>
-            `;
-            document.getElementById('invoice-current').innerHTML = invHtml;
-        }
-
-        async function prosesPelunasan() {
-            if(!confirm("Proses pelunasan tagihan bulan ini?")) return;
-            try {
-                await db.from('payments').insert([{ customer_id: activeCust.id, amount: activeCust.harga || 0, payment_method: 'Cash' }]);
-                if(activeCust.isolation_status === 'ISOLATED') {
-                    await eksekusiMikrotik(activeCust.id, activeCust.pppoe_username, false, true); // true = skip alert
-                }
-                alert("Pelunasan Berhasil!");
-                await initData();
-                openDetail(activeCust.id); // Refresh data
-            } catch(e) { alert(e.message); }
-        }
-
-        // ============================
-        // EDIT PELANGGAN & MIKROTIK EKSEKUSI
-        // ============================
-        function openEditModal() {
-            document.getElementById('form-title').innerText = "Edit Pelanggan";
-            document.getElementById('form-id').value = activeCust.id;
-            document.getElementById('cust-name').value = activeCust.name;
-            document.getElementById('cust-phone').value = activeCust.phone;
-            document.getElementById('cust-package').value = activeCust.packname;
-            document.getElementById('cust-price').value = activeCust.harga;
-            document.getElementById('cust-user').value = activeCust.pppoe_username;
-            document.getElementById('cust-pass').value = activeCust.pppoe_password;
-            document.getElementById('cust-due').value = activeCust.due_date;
-            openModal('modal-form');
-        }
-
-        document.getElementById('customer-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var id = document.getElementById('form-id').value;
-            var payload = {
-                name: document.getElementById('cust-name').value,
-                phone: document.getElementById('cust-phone').value,
-                packname: document.getElementById('cust-package').value,
-                harga: parseInt(document.getElementById('cust-price').value),
-                pppoe_username: document.getElementById('cust-user').value,
-                pppoe_password: document.getElementById('cust-pass').value,
-                due_date: parseInt(document.getElementById('cust-due').value)
-            };
-
-            try {
-                if(id) {
-                    await db.from('customers').update(payload).eq('id', id);
-                    alert("Update sukses!");
-                } else {
-                    payload.isolation_status = 'NORMAL';
-                    await db.from('customers').insert([payload]);
-                    alert("Simpan sukses!");
-                }
-                document.getElementById('customer-form').reset();
-                document.getElementById('form-id').value = "";
-                closeModal('modal-form');
-                await initData();
-                if(id) openDetail(id);
-            } catch(e) { alert(e.message); }
-        });
-
-        async function eksekusiMikrotik(customerId, pppoeUser, makeIsolated, skipAlert=false) {
-            var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
-            try {
-                if(!skipAlert) alert("Mengeksekusi MikroTik...");
-                const res = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-                    body: JSON.stringify({ pppoe_username: pppoeUser, action: actionText })
-                });
-                await db.from('customers').update({ isolation_status: actionText }).eq('id', customerId);
-                
-                if(!skipAlert) alert("Sukses dieksekusi!");
-                await initData();
-                openDetail(customerId);
-            } catch(e) { alert(e.message); }
-        }
-    </script>
+    <!-- Sambungan ke file JavaScript kita -->
+    <script src="app.js"></script>
 </body>
 </html>
