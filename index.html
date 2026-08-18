@@ -107,6 +107,7 @@
     </style>
 </head>
 <body>
+    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="screen active" style="justify-content: center; align-items: center; background: var(--navy-dark);">
         <div style="background: var(--navy-light); padding: 40px; border-radius: 16px; text-align: center; color: white; width: 90%; max-width: 350px;">
             <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 20px;">NET<span style="color:var(--cyan-accent)">//</span>BILLING</h1>
@@ -115,6 +116,7 @@
                 <input type="password" id="password" placeholder="Password" required style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border:none;">
                 <button type="submit" style="width: 100%; padding: 15px; background: var(--cyan-accent); border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">LOGIN</button>
             </form>
+            <p id="pesan-error" style="color: var(--danger); font-size: 12px; margin-top: 15px; display: none; font-weight: 600;">Username atau Password salah!</p>
         </div>
     </div>
 
@@ -122,7 +124,7 @@
     <div id="app-screen" class="screen">
         <header class="app-header">
             <div class="greeting"><h2>Beranda Owner</h2><p id="realtime-clock">Memuat...</p></div>
-            <button class="btn-logout" onclick="window.location.reload()">Keluar</button>
+            <button class="btn-logout" id="btn-logout">Keluar</button>
         </header>
         <main class="app-content">
             <section id="view-dashboard" class="view active">
@@ -248,6 +250,7 @@
     </div>
 
     <script>
+        // KREDENSIAL SUPABASE
         var SUPABASE_URL = 'https://vljvulbjxhuysesronog.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsanZ1bGJqeGh1eXNlc3Jvbm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMjgyOTcsImV4cCI6MjEwMjYwNDI5N30.yPq1kySc9iPuOdS_eCWGRc60gUoklNqc2YRLQ7ILCIk';
         if (typeof window.supabaseClient === 'undefined') { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
@@ -257,18 +260,44 @@
         var globalPayments = [];
         var activeCust = null;
 
+        // TANGGAL REALTIME
         setInterval(() => {
             document.getElementById('realtime-clock').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
         }, 1000);
 
+        // ==========================================
+        // FITUR BARU: AUTO-LOGIN (REMEMBER ME)
+        // ==========================================
+        document.addEventListener("DOMContentLoaded", function() {
+            // Cek apakah browser masih ingat status login kita
+            if (localStorage.getItem("isLoggedIn") === "true") {
+                document.getElementById('login-screen').classList.remove('active');
+                document.getElementById('app-screen').classList.add('active');
+                initData();
+            }
+        });
+
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             if (document.getElementById('username').value === "admin" && document.getElementById('password').value === "1234") {
+                
+                // Simpan Sesi Login ke Browser
+                localStorage.setItem("isLoggedIn", "true"); 
+
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('app-screen').classList.add('active');
                 initData(); 
+            } else {
+                document.getElementById('pesan-error').style.display = 'block';
             }
         });
+
+        // FUNGSI LOGOUT (Hapus Ingatan Sesi)
+        document.getElementById('btn-logout').addEventListener('click', function() { 
+            localStorage.removeItem("isLoggedIn");
+            window.location.reload(); 
+        });
+        // ==========================================
 
         function switchView(id, btn) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
