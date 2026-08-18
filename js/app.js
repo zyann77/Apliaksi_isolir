@@ -100,11 +100,6 @@ async function loadPackages() {
     }
 }
 
-document.getElementById('cust-package-id')?.addEventListener('change', function(e) {
-    let pkg = globalPackages.find(p => p.id === e.target.value);
-    if(pkg) document.getElementById('cust-price').value = pkg.price;
-});
-
 // MENGAMBIL PELANGGAN
 async function loadCustomers() {
     let { data, error } = await db.from('customers').select('*, packages(ppp_profile, price)').order('created_at', { ascending: false });
@@ -286,6 +281,36 @@ function renderInvoiceList() {
     document.getElementById('count-today').innerText = countToday;
 }
 
+// 🚀 FUNGSI TARIK DATA DARI API MIKROTIK
+async function fetchMikrotikStatus(pppoe_username) {
+    try {
+        let response = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+            body: JSON.stringify({ pppoe_username: pppoe_username, action: 'STATUS' })
+        });
+        
+        let result = await response.json();
+        
+        if (result && !result.error) {
+            document.getElementById('det-uptime').innerText = result.uptime || 'Offline';
+            document.getElementById('det-remote').innerText = result.remote_address || '-';
+            document.getElementById('det-logout').innerText = result.last_logout || '-';
+            document.getElementById('det-uptime').style.color = result.uptime ? 'var(--success)' : 'var(--danger)';
+        } else {
+            document.getElementById('det-uptime').innerText = 'Offline / Data Tidak Ditemukan';
+            document.getElementById('det-uptime').style.color = 'var(--danger)';
+            document.getElementById('det-remote').innerText = '-';
+            document.getElementById('det-logout').innerText = '-';
+        }
+    } catch(e) {
+        document.getElementById('det-uptime').innerText = 'Gagal Konek ke Router API';
+        document.getElementById('det-uptime').style.color = 'var(--danger)';
+        document.getElementById('det-remote').innerText = '-';
+        document.getElementById('det-logout').innerText = '-';
+    }
+}
+
 // OPEN BOTTOM SHEET DETAIL
 function openDetail(id) {
     activeCust = globalCustomers.find(c => String(c.id) === String(id));
@@ -306,7 +331,6 @@ function openDetail(id) {
     document.getElementById('det-status-badge').innerText = isIso ? "ISOLATED" : "ONLINE";
     document.getElementById('det-status-badge').className = isIso ? "id-badge isolated" : "id-badge";
 
-    // INFO DATA UMUM
     document.getElementById('det-code').innerText = activeCust.customer_code || '-';
     document.getElementById('det-pppoe').innerText = activeCust.pppoe_username || '-';
     document.getElementById('det-reg').innerText = activeCust.installation_date || new Date().toISOString().split('T')[0];
@@ -315,10 +339,16 @@ function openDetail(id) {
     document.getElementById('det-pack').innerText = packName;
     document.getElementById('det-price').innerText = formatRp(packPrice);
 
-    // 🚀 INFO MIKROTIK (Kosong sebelum API dicolokkan)
-    document.getElementById('det-uptime').innerText = activeCust.uptime || '-';
-    document.getElementById('det-remote').innerText = activeCust.remote_address || '-';
-    document.getElementById('det-logout').innerText = activeCust.last_logout || '-';
+    // 🚀 TAMPILKAN LOADING SEBELUM DATA MIKROTIK MASUK
+    document.getElementById('det-uptime').innerText = 'Memuat dari Router...';
+    document.getElementById('det-uptime').style.color = 'var(--text-muted)';
+    document.getElementById('det-remote').innerText = 'Memuat...';
+    document.getElementById('det-logout').innerText = 'Memuat...';
+    
+    // 🚀 JALANKAN PEMANGGILAN API MIKROTIK
+    if(activeCust.pppoe_username) {
+        fetchMikrotikStatus(activeCust.pppoe_username);
+    }
 
     let btnAct = document.getElementById('btn-det-action');
     if(isIso) {
@@ -331,12 +361,12 @@ function openDetail(id) {
         btnAct.onclick = () => eksekusiMikrotik(activeCust.id, activeCust.pppoe_username, true);
     }
 
-    // 🚀 LOGIKA SEMBUNYIKAN TOMBOL BAYAR JIKA SUDAH LUNAS
+    // LOGIKA SEMBUNYIKAN TOMBOL BAYAR
     if (hasPaid) {
-        document.getElementById('btn-pay-lunas').style.display = 'none'; // Sembunyikan Tombol
+        document.getElementById('btn-pay-lunas').style.display = 'none'; 
         document.getElementById('preview-invoice').innerText = "✅ Tagihan bulan ini sudah dilunasi. Tidak perlu ditagih.";
     } else {
-        document.getElementById('btn-pay-lunas').style.display = 'block'; // Tampilkan Tombol
+        document.getElementById('btn-pay-lunas').style.display = 'block'; 
         
         let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
         let invNo = "INV-" + new Date().getFullYear() + String(new Date().getMonth()+1).padStart(2,'0') + "-" + String(activeCust.customer_code).replace('CUST-','');
