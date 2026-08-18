@@ -3,196 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Billing ISP Owner</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Sambungan ke file CSS kita -->
+    <title>Owner Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    
-    <!-- Library Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <!-- ================= LAYAR LOGIN ================= -->
-    <div id="login-screen" class="screen active">
+    <!-- ================= LOGIN SCREEN ================= -->
+    <div id="login-screen" class="screen active login-bg">
         <div class="login-box">
-            <h1>NET BILLING</h1>
-            <p>Owner Dashboard</p>
+            <h1 class="logo-text">ISP<span>CENTER</span></h1>
+            <p class="subtitle">Owner Command Center</p>
             <form id="login-form">
                 <input type="text" id="username" placeholder="Username" required autocomplete="off">
                 <input type="password" id="password" placeholder="Password" required autocomplete="off">
-                <button type="submit" class="btn-primary">LOGIN</button>
+                <button type="submit" class="btn-primary">SECURE LOGIN</button>
             </form>
-            <p id="pesan-error" class="error-msg">Username atau Password salah!</p>
+            <p id="pesan-error" class="error-msg">Akses Ditolak!</p>
         </div>
     </div>
 
-    <!-- ================= LAYAR UTAMA (DASHBOARD) ================= -->
+    <!-- ================= APP SCREEN ================= -->
     <div id="app-screen" class="screen">
-        <header class="app-header">
-            <div>
-                <h2 style="color: white; font-size:18px;">Dashboard Owner</h2>
-                <p id="realtime-clock" style="color: #64FFDA; font-size:12px;">Memuat...</p>
-            </div>
-            <button id="btn-logout" class="btn-logout">Keluar</button>
-        </header>
-
+        
         <main class="app-content">
+            
+            <!-- VIEW: HOME DASHBOARD -->
             <div id="view-dashboard" class="view active">
-                <div class="finance-card">
-                    <p style="font-size:12px; opacity:0.9;">Pendapatan Bulan Ini</p>
-                    <h1 id="dashboard-income">Rp 0</h1>
+                <div class="header-top">
+                    <div>
+                        <p style="color:var(--text-muted); font-size:12px; font-weight:600; text-transform:uppercase;">Good Morning,</p>
+                        <h2 style="color:var(--navy); font-weight:800; font-size:22px;">Owner 👋</h2>
+                    </div>
+                    <button id="btn-logout" class="avatar-sm">OW</button>
+                </div>
+
+                <!-- Hero Financial Card -->
+                <div class="hero-card">
+                    <p style="opacity:0.8; font-size:13px; margin-bottom:4px;">Pendapatan Bulan Ini</p>
+                    <h1 id="dash-income">Rp 0</h1>
+                    <div class="trend-badge">↑ Updated Live</div>
+                </div>
+
+                <!-- Financial Split -->
+                <div class="fin-split">
+                    <div class="fin-box">
+                        <p>Pendapatan Hari Ini</p>
+                        <h3 id="dash-income-today">Rp 0</h3>
+                    </div>
+                    <div class="fin-box">
+                        <p>Belum Tertagih</p>
+                        <h3 id="dash-outstanding" style="color:var(--danger);">Rp 0</h3>
+                    </div>
+                </div>
+
+                <!-- ISP Status Panel -->
+                <h3 class="section-title">ISP STATUS</h3>
+                <div class="status-panel">
+                    <div class="status-header">
+                        <div class="pulse-green"></div>
+                        <span style="font-weight:700; color:var(--navy); font-size:13px;">ALL SYSTEMS OPERATIONAL</span>
+                    </div>
+                    <div class="status-grid">
+                        <div class="s-item"><span>MikroTik</span><b style="color:var(--success);">CONNECTED</b></div>
+                        <div class="s-item"><span>Pelanggan</span><b id="s-total">0</b></div>
+                        <div class="s-item"><span>Online</span><b id="s-online" style="color:var(--success);">0</b></div>
+                        <div class="s-item"><span>Terisolir</span><b id="s-iso" style="color:var(--danger);">0</b></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: CUSTOMERS -->
+            <div id="view-customers" class="view">
+                <div class="header-top" style="margin-bottom:15px;">
+                    <h2 style="color:var(--navy); font-weight:800; font-size:22px;">Pelanggan</h2>
+                </div>
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-customer" class="search-bar" placeholder="Cari nama pelanggan...">
                 </div>
                 
-                <h3 class="section-title">Ringkasan Sistem</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <span>Total Pelanggan</span><h3 id="stat-total">0</h3>
-                    </div>
-                    <div class="stat-card" style="color: var(--success);">
-                        <span>Aktif</span><h3 id="stat-active">0</h3>
-                    </div>
-                    <div class="stat-card" style="color: var(--danger);">
-                        <span>Terisolir</span><h3 id="stat-isolated">0</h3>
-                    </div>
+                <div class="filter-scroll">
+                    <div class="chip active">Semua</div>
+                    <div class="chip">Aktif</div>
+                    <div class="chip">Belum Bayar</div>
+                    <div class="chip">Isolir</div>
                 </div>
+
+                <div id="customer-list"></div>
             </div>
 
-            <div id="view-customers" class="view">
-                <input type="text" id="search-customer" class="search-bar" placeholder="Cari pelanggan...">
-                <div id="customer-list"></div>
-                <button class="fab-add" onclick="openModal('modal-form')">+</button>
+            <!-- VIEW: BILLING -->
+            <div id="view-billing" class="view">
+                <div class="header-top" style="margin-bottom:20px;">
+                    <h2 style="color:var(--navy); font-weight:800; font-size:22px;">Billing Center</h2>
+                </div>
+                <div style="text-align:center; margin-bottom:25px;">
+                    <p style="color:var(--text-muted); font-size:13px; font-weight:600; margin-bottom:5px;">Total Belum Tertagih</p>
+                    <h1 id="bill-outstanding" style="font-size:36px; color:var(--navy); font-weight:800;">Rp 0</h1>
+                    <p style="color:var(--danger); font-size:13px; font-weight:600; margin-top:5px;"><span id="bill-unpaid-count">0</span> Pelanggan belum membayar.</p>
+                </div>
+                
+                <h3 class="section-title">Daftar Tagihan Berjalan</h3>
+                <div id="invoice-list"></div>
             </div>
+
+            <!-- VIEW: NETWORK -->
+            <div id="view-network" class="view">
+                <div class="header-top" style="margin-bottom:20px;">
+                    <h2 style="color:var(--navy); font-weight:800; font-size:22px;">Network Monitor</h2>
+                </div>
+                <div class="status-panel">
+                    <div class="status-header">
+                        <div class="pulse-green"></div><span style="font-weight:700; color:var(--navy); font-size:13px;">ROUTER ONLINE</span>
+                    </div>
+                    <div class="data-row"><span class="data-label">Identity</span><span class="data-value">MikroTik-01</span></div>
+                    <div class="data-row"><span class="data-label">Uptime</span><span class="data-value" style="color:var(--success);">Connected (API Ready)</span></div>
+                </div>
+                <p style="text-align:center; margin-top:20px; color:var(--text-muted); font-size:12px;">Visualisasi Traffic Segera Hadir di Update Berikutnya.</p>
+            </div>
+
         </main>
 
+        <!-- FLOATING ACTION BUTTON (DASHBOARD ONLY) -->
+        <div class="fab-menu" id="fab-main" onclick="toggleFab()">+</div>
+        <div class="fab-options" id="fab-options">
+            <div class="fab-opt" onclick="openModal('modal-form')"><span>👤 Tambah Pelanggan</span></div>
+            <div class="fab-opt" onclick="switchView('view-billing', document.querySelectorAll('.nav-item')[2])"><span>💰 Input Pembayaran</span></div>
+        </div>
+
+        <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="switchView('view-dashboard', this)"><span>🏠</span>Home</button>
-            <button class="nav-item" onclick="switchView('view-customers', this)"><span>👥</span>Pelanggan</button>
+            <button class="nav-item active" onclick="switchView('view-dashboard', this)"><div class="nav-icon">⚲</div>Home</button>
+            <button class="nav-item" onclick="switchView('view-customers', this)"><div class="nav-icon">👥</div>Customers</button>
+            <button class="nav-item" onclick="switchView('view-billing', this)"><div class="nav-icon">📄</div>Billing</button>
+            <button class="nav-item" onclick="switchView('view-network', this)"><div class="nav-icon">🛜</div>Network</button>
+            <button class="nav-item"><div class="nav-icon">⚙️</div>More</button>
         </nav>
     </div>
 
-    <!-- ================= LAYAR DETAIL PELANGGAN (SESUAI GAMBAR) ================= -->
-    <div id="detail-screen" class="screen" style="background: #F4F7FE;">
-        <div class="profile-header">
-            <div class="profile-nav">
-                <button class="btn-back" onclick="closeDetailScreen()">←</button>
-                <div style="font-size:12px;">Tambahkan Foto Rumah Mungkin ?</div>
-                <div>🖼️ ⬛</div>
-            </div>
-            <div class="profile-info">
-                <div class="avatar" id="det-avatar">A</div>
+    <!-- ================= CUSTOMER DETAIL (BOTTOM SHEET) ================= -->
+    <div id="detail-sheet" class="bottom-sheet-overlay">
+        <div class="bottom-sheet">
+            <div class="sheet-handle" onclick="closeDetailScreen()"></div>
+            
+            <div class="sheet-header">
                 <div>
-                    <h2 id="det-name">-</h2>
-                    <p style="color: #64FFDA; font-size: 13px; margin: 4px 0;">📞 <span id="det-phone">-</span></p>
-                    <span class="id-badge">ID pel : <span id="det-id">-</span></span>
+                    <h2 id="det-name" style="font-size:20px; font-weight:800; color:var(--navy);">Nama</h2>
+                    <div class="id-badge" id="det-status-badge">ONLINE</div>
                 </div>
-            </div>
-        </div>
-
-        <div class="profile-tabs">
-            <div class="tab-item active" onclick="switchTab('tab-detail', this)">DETAIL</div>
-            <div class="tab-item" onclick="switchTab('tab-bulan', this)">BULAN</div>
-            <div class="tab-item" onclick="switchTab('tab-bayar', this)">BAYAR</div>
-        </div>
-
-        <div class="detail-content">
-            <!-- TAB DETAIL -->
-            <div id="tab-detail" class="tab-pane active">
-                <div id="det-status-banner" class="status-banner">Memuat...</div>
-                
-                <div class="detail-card">
-                    <div class="card-title">Rincian Data <span style="font-size:12px; font-weight:normal; color:#0ea5e9; cursor:pointer;" onclick="openEditModal()">✏️ Edit</span></div>
-                    <div class="data-group">
-                        <span class="data-label">Tanggal Daftar</span>
-                        <span class="data-value" id="det-reg">-</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
-                        <div class="data-group">
-                            <span class="data-label">Tagihan Setiap Tanggal</span>
-                            <span class="data-value" id="det-due">-</span>
-                        </div>
-                        <div class="box-merah">
-                            <span style="font-size:10px;">Tanggal Isolir</span>
-                            <span id="det-iso-date" style="font-size:16px; font-weight:bold;">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-card">
-                    <div class="card-title">Rincian Biaya</div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span class="data-label" id="det-pack">-</span>
-                        <span class="data-value" id="det-price">Rp 0</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
-                        <span class="data-label" style="font-weight:bold; color:#333;">Total Biaya Perbulan</span>
-                        <span class="data-value" style="color:#0ea5e9; font-weight:bold;" id="det-total">Rp 0</span>
-                    </div>
-                </div>
-
-                <div class="detail-card">
-                    <div class="card-title">Rincian Jaringan <span style="font-size:12px; font-weight:normal; cursor:pointer; color:#0ea5e9;" onclick="fetchMikrotikLive()">↻ Refresh</span></div>
-                    <div class="mikrotik-box">
-                        <div style="color:#0ea5e9; font-weight:bold; margin-bottom:10px;">🛜 Mikrotik Secret</div>
-                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
-                            <span>Remote Address:</span><span id="det-ip">Loading...</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
-                            <span>Uptime:</span><span id="det-uptime" style="font-weight:bold; color:var(--success);">Loading...</span>
-                        </div>
-                    </div>
-                    <div class="data-group" style="margin-top:10px;">
-                        <span class="data-label">Username PPPoE</span>
-                        <span class="data-value" id="det-pppoe">-</span>
-                    </div>
-                </div>
-
-                <button id="btn-det-isolir" class="btn-full"></button>
+                <div class="avatar-lg" id="det-avatar">A</div>
             </div>
 
-            <!-- TAB BULAN -->
-            <div id="tab-bulan" class="tab-pane">
-                <div class="detail-card">
-                    <div class="card-title">Histori Pembayaran</div>
-                    <div id="histori-list"></div>
+            <div class="sheet-content">
+                <div class="section-title">CONTACT</div>
+                <div class="sheet-card">
+                    <div class="data-row">
+                        <div>
+                            <span class="data-label">WhatsApp</span>
+                            <span class="data-value" id="det-wa" style="display:block;">0812...</span>
+                        </div>
+                        <a id="det-wa-link" target="_blank" style="text-decoration:none;">
+                            <div class="btn-sm" style="background:#25D366; color:white;">WhatsApp</div>
+                        </a>
+                    </div>
                 </div>
-            </div>
 
-            <!-- TAB BAYAR -->
-            <div id="tab-bayar" class="tab-pane">
-                <div class="detail-card">
-                    <div class="card-title">Tagihan Saat Ini</div>
-                    <div id="invoice-current" style="margin-bottom:15px;"></div>
-                    <button class="btn-full" style="background:var(--success);" onclick="prosesPelunasan()">✅ LUNASKAN BULAN INI</button>
+                <div class="section-title">INTERNET</div>
+                <div class="sheet-card">
+                    <div class="data-row"><span class="data-label">Paket</span><span class="data-value" id="det-pack" style="font-weight:700;">-</span></div>
+                    <div class="data-row"><span class="data-label">Username PPPoE</span><span class="data-value" id="det-pppoe">-</span></div>
+                    <div class="data-row"><span class="data-label">Password PPPoE</span><span class="data-value">*** <span style="font-size:10px; cursor:pointer; color:var(--cyan);" onclick="openEditModal()">[Edit]</span></span></div>
+                </div>
+
+                <div class="section-title">BILLING</div>
+                <div class="sheet-card">
+                    <div class="data-row">
+                        <div>
+                            <span class="data-value" id="det-price" style="font-size:18px; font-weight:800; color:var(--navy);">Rp 0</span>
+                            <span class="data-label" style="display:block;">per bulan</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="data-label" style="display:block;">Jatuh tempo</span>
+                            <span class="data-value">Tgl <span id="det-due">0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:25px; display:flex; gap:10px;">
+                    <button class="btn-primary" id="btn-det-action" style="flex:1;">ACTIVATE</button>
+                    <button class="btn-primary" id="btn-det-pay" style="flex:1; background:var(--success);" onclick="bukaModalBayar()">BAYAR</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ================= MODAL TAMBAH/EDIT ================= -->
+    <!-- ================= MODALS ================= -->
+    <!-- Add/Edit Customer Form -->
     <div id="modal-form" class="modal">
         <div class="modal-content">
-            <h3 id="form-title" style="margin-bottom:15px;">Form Pelanggan</h3>
+            <div class="sheet-handle" onclick="closeModal('modal-form')"></div>
+            <h3 id="form-title" style="margin-bottom:20px; font-weight:800; color:var(--navy);">Customer Baru</h3>
             <form id="customer-form">
                 <input type="hidden" id="form-id">
-                <div class="input-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required></div>
-                <div class="input-group"><label>WA (Awali 62)</label><input type="number" id="cust-phone" required></div>
-                <div class="input-group"><label>Paket Internet</label><input type="text" id="cust-package" required></div>
-                <div class="input-group"><label>Harga Bulanan</label><input type="number" id="cust-price" required></div>
-                <div class="input-group"><label>Username PPPoE</label><input type="text" id="cust-user" required></div>
-                <div class="input-group"><label>Password PPPoE</label><input type="text" id="cust-pass" required></div>
-                <div class="input-group"><label>Tgl Jatuh Tempo (1-31)</label><input type="number" id="cust-due" min="1" max="31" required></div>
                 
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button type="button" class="btn-full" style="background:#94a3b8; flex:1;" onclick="closeModal('modal-form')">Batal</button>
-                    <button type="submit" id="btn-save-cust" class="btn-full" style="flex:2;">SIMPAN</button>
-                </div>
+                <div class="section-title">01. CONTACT</div>
+                <div class="input-group"><input type="text" id="cust-name" placeholder="Nama Lengkap" required></div>
+                <div class="input-group"><input type="number" id="cust-phone" placeholder="WhatsApp (Awali 62)" required></div>
+                
+                <div class="section-title">02. INTERNET</div>
+                <div class="input-group"><input type="text" id="cust-package" placeholder="Nama Paket (cth: HOME 20)" required></div>
+                <div class="input-group"><input type="text" id="cust-user" placeholder="Username PPPoE" required></div>
+                <div class="input-group"><input type="text" id="cust-pass" placeholder="Password PPPoE" required></div>
+                
+                <div class="section-title">03. BILLING</div>
+                <div class="input-group"><input type="number" id="cust-price" placeholder="Harga Bulanan (cth: 150000)" required></div>
+                <div class="input-group"><input type="number" id="cust-due" placeholder="Tanggal Jatuh Tempo (1-31)" min="1" max="31" required></div>
+                
+                <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top:15px;">CREATE CUSTOMER</button>
             </form>
         </div>
     </div>
 
-    <!-- Sambungan ke file JavaScript kita -->
+    <!-- Payment Confirmation -->
+    <div id="modal-pay" class="modal">
+        <div class="modal-content">
+            <div class="sheet-handle" onclick="closeModal('modal-pay')"></div>
+            <h3 style="margin-bottom:5px; font-weight:800; color:var(--navy);">Payment Confirmation</h3>
+            <p id="pay-cust-name" style="font-weight:600; color:var(--text-muted); margin-bottom:20px;">-</p>
+            
+            <form id="payment-form">
+                <input type="hidden" id="pay-id">
+                <div class="sheet-card" style="margin-bottom:20px; text-align:center; background:#f8fafc;">
+                    <span class="data-label">Total Pembayaran</span>
+                    <input type="number" id="pay-amount" style="background:transparent; border:none; text-align:center; font-size:28px; font-weight:800; color:var(--navy); width:100%; outline:none;" required>
+                </div>
+
+                <div class="section-title">METODE PEMBAYARAN</div>
+                <select id="pay-method" class="input-group" style="width:100%; padding:15px; border-radius:12px; border:1px solid #e2e8f0; font-weight:600; outline:none; margin-bottom:20px;">
+                    <option value="Cash">Tunai / Cash</option>
+                    <option value="Transfer">Transfer Bank</option>
+                    <option value="QRIS">QRIS</option>
+                    <option value="E-Wallet">E-Wallet</option>
+                </select>
+                
+                <button type="submit" class="btn-primary" style="background:var(--navy);">CONFIRM PAYMENT</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Check Animasi -->
+    <div id="success-anim" class="modal" style="background:rgba(255,255,255,0.9);">
+        <div style="text-align:center;">
+            <div style="width:80px; height:80px; background:var(--success); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:40px; margin:0 auto 15px auto;">✓</div>
+            <h2 style="color:var(--navy); font-weight:800;">Payment Successful</h2>
+        </div>
+    </div>
+
     <script src="js/app.js"></script>
 </body>
 </html>
