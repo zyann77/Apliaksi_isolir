@@ -15,15 +15,12 @@
         .login-box { margin: auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
         .login-box h1 { color: var(--text-main); }
         .login-box h1 span { color: var(--primary); }
-        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; text-align: center; font-weight: bold; }
         .btn-primary { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .app-header { display: flex; justify-content: space-between; padding: 15px; background: white; border-bottom: 1px solid var(--border); }
         .app-content { flex: 1; padding: 15px; overflow-y: auto; }
         #btn-logout { background: #ef4444; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold;}
     </style>
-    
-    <!-- Load Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -34,9 +31,9 @@
             <p style="color: gray; margin-bottom: 20px; font-size: 14px;">Admin Management System</p>
             
             <form id="login-form">
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Password" required>
-                <button type="submit" id="btn-login" class="btn-primary">LOGIN</button>
+                <!-- HANYA INPUT USERNAME -->
+                <input type="text" id="username" placeholder="Masukkan Username" required autocomplete="off">
+                <button type="submit" id="btn-login" class="btn-primary">MASUK</button>
             </form>
             <p id="pesan-error" style="color: red; font-size: 12px; margin-top: 10px; display: none;"></p>
         </div>
@@ -52,70 +49,44 @@
             <div style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #ddd; text-align: center;">
                 <h3 style="color: #10b981;">LOGIN BERHASIL!</h3>
                 <p>Selamat datang di NET//CONTROL bos.</p>
-                <p style="margin-top: 10px; font-size: 14px; color: gray;">Email Anda: <span id="user-email-text"></span></p>
+                <p style="margin-top: 10px; font-size: 14px; color: gray;">Login sebagai: <span id="user-name-text" style="font-weight: bold; color: black;"></span></p>
             </div>
         </main>
     </div>
 
-    <!-- SCRIPT LOGIC -->
+    <!-- SCRIPT LOGIC MANUAL -->
     <script>
-        // 1. Konek ke Supabase
-        const SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ==========================================
+        // SETTING USERNAME ANDA DI SINI BOS
+        // ==========================================
+        const USERNAME_VALID = "admin123"; 
 
         const formLogin = document.getElementById('login-form');
         const pesanError = document.getElementById('pesan-error');
-        const btnLogin = document.getElementById('btn-login');
 
-        // 2. Cek apakah sudah login sebelumnya
-        async function checkLogin() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                tampilDashboard(session.user.email);
-            }
-        }
-        checkLogin();
-
-        // 3. Proses saat tombol login ditekan
-        formLogin.addEventListener('submit', async function(e) {
-            e.preventDefault(); // MENCEGAH HALAMAN REFRESH DAN MUNCUL TANDA '?'
+        formLogin.addEventListener('submit', function(e) {
+            e.preventDefault(); // Cegah refresh halaman (agar tidak muncul tanda ?)
             
-            const emailValue = document.getElementById('email').value;
-            const passwordValue = document.getElementById('password').value;
+            const inputUsername = document.getElementById('username').value;
             
-            btnLogin.innerText = 'MEMUAT...';
-            pesanError.style.display = 'none';
-
-            // Kirim data ke Supabase
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: emailValue,
-                password: passwordValue,
-            });
-
-            if (error) {
-                // Jika Gagal
-                btnLogin.innerText = 'LOGIN';
-                pesanError.innerText = 'Gagal: Email atau Password salah!';
-                pesanError.style.display = 'block';
+            // Cek apakah username sama dengan settingan di atas
+            if (inputUsername === USERNAME_VALID) {
+                // Berhasil masuk
+                document.getElementById('login-screen').classList.remove('active');
+                document.getElementById('app-screen').classList.add('active');
+                document.getElementById('user-name-text').innerText = inputUsername;
+                pesanError.style.display = 'none';
             } else {
-                // Jika Berhasil
-                tampilDashboard(data.user.email);
+                // Gagal masuk
+                pesanError.innerText = 'Username salah bos!';
+                pesanError.style.display = 'block';
             }
         });
 
-        // 4. Proses Logout
-        document.getElementById('btn-logout').addEventListener('click', async function() {
-            await supabase.auth.signOut();
-            window.location.reload();
+        // Proses Logout (Kembali ke awal)
+        document.getElementById('btn-logout').addEventListener('click', function() {
+            window.location.reload(); 
         });
-
-        // 5. Fungsi pindah layar ke Dashboard
-        function tampilDashboard(emailUser) {
-            document.getElementById('login-screen').classList.remove('active');
-            document.getElementById('app-screen').classList.add('active');
-            document.getElementById('user-email-text').innerText = emailUser;
-        }
     </script>
 </body>
 </html>
