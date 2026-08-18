@@ -39,14 +39,12 @@
                     <button id="btn-logout" class="avatar-sm">OW</button>
                 </div>
 
-                <!-- Hero Financial Card -->
                 <div class="hero-card">
                     <p style="opacity:0.8; font-size:13px; margin-bottom:4px;">Pendapatan Bulan Ini</p>
                     <h1 id="dash-income">Rp 0</h1>
                     <div class="trend-badge">↑ Updated Live</div>
                 </div>
 
-                <!-- Financial Split -->
                 <div class="fin-split">
                     <div class="fin-box">
                         <p>Pendapatan Hari Ini</p>
@@ -58,7 +56,6 @@
                     </div>
                 </div>
 
-                <!-- ISP Status Panel -->
                 <h3 class="section-title">ISP STATUS</h3>
                 <div class="status-panel">
                     <div class="status-header">
@@ -83,14 +80,12 @@
                     <span class="search-icon">🔍</span>
                     <input type="text" id="search-customer" class="search-bar" placeholder="Cari nama pelanggan...">
                 </div>
-                
                 <div class="filter-scroll">
                     <div class="chip active">Semua</div>
                     <div class="chip">Aktif</div>
                     <div class="chip">Belum Bayar</div>
                     <div class="chip">Isolir</div>
                 </div>
-
                 <div id="customer-list"></div>
             </div>
 
@@ -105,7 +100,11 @@
                     <p style="color:var(--danger); font-size:13px; font-weight:600; margin-top:5px;"><span id="bill-unpaid-count">0</span> Pelanggan belum membayar.</p>
                 </div>
                 
-                <h3 class="section-title">Daftar Tagihan Berjalan</h3>
+                <h3 class="section-title">Kirim Penagihan</h3>
+                <div class="filter-scroll">
+                    <div class="chip active" onclick="filterBilling('semua', this)">Semua Unpaid</div>
+                    <div class="chip" onclick="filterBilling('hari-ini', this)" style="background:var(--danger-light); color:var(--danger);">Hari Ini (<span id="count-today">0</span>)</div>
+                </div>
                 <div id="invoice-list"></div>
             </div>
 
@@ -121,16 +120,14 @@
                     <div class="data-row"><span class="data-label">Identity</span><span class="data-value">MikroTik-01</span></div>
                     <div class="data-row"><span class="data-label">Uptime</span><span class="data-value" style="color:var(--success);">Connected (API Ready)</span></div>
                 </div>
-                <p style="text-align:center; margin-top:20px; color:var(--text-muted); font-size:12px;">Visualisasi Traffic Segera Hadir di Update Berikutnya.</p>
             </div>
 
         </main>
 
-        <!-- FLOATING ACTION BUTTON (DASHBOARD ONLY) -->
         <div class="fab-menu" id="fab-main" onclick="toggleFab()">+</div>
         <div class="fab-options" id="fab-options">
-            <div class="fab-opt" onclick="openModal('modal-form')"><span>👤 Tambah Pelanggan</span></div>
-            <div class="fab-opt" onclick="switchView('view-billing', document.querySelectorAll('.nav-item')[2])"><span>💰 Input Pembayaran</span></div>
+            <div class="fab-opt" onclick="bukaModalTambah()"><span>👤 Tambah Pelanggan</span></div>
+            <div class="fab-opt" onclick="switchView('view-billing', document.querySelectorAll('.nav-item')[2])"><span>💰 Menu Penagihan</span></div>
         </div>
 
         <!-- BOTTOM NAVIGATION -->
@@ -146,14 +143,18 @@
     <!-- ================= CUSTOMER DETAIL (BOTTOM SHEET) ================= -->
     <div id="detail-sheet" class="bottom-sheet-overlay">
         <div class="bottom-sheet">
-            <div class="sheet-handle" onclick="closeDetailScreen()"></div>
-            
-            <div class="sheet-header">
-                <div>
-                    <h2 id="det-name" style="font-size:20px; font-weight:800; color:var(--navy);">Nama</h2>
-                    <div class="id-badge" id="det-status-badge">ONLINE</div>
+            <div class="sheet-header" style="flex-direction:column; gap:15px;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <button class="btn-back" onclick="closeDetailScreen()">← Kembali</button>
+                    <button class="btn-sm" style="background:var(--navy); color:white;" onclick="openEditModal()">✏️ Edit Data</button>
                 </div>
-                <div class="avatar-lg" id="det-avatar">A</div>
+                <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                    <div>
+                        <h2 id="det-name" style="font-size:20px; font-weight:800; color:var(--navy);">Nama</h2>
+                        <div class="id-badge" id="det-status-badge">ONLINE</div>
+                    </div>
+                    <div class="avatar-lg" id="det-avatar">A</div>
+                </div>
             </div>
 
             <div class="sheet-content">
@@ -174,7 +175,7 @@
                 <div class="sheet-card">
                     <div class="data-row"><span class="data-label">Paket</span><span class="data-value" id="det-pack" style="font-weight:700;">-</span></div>
                     <div class="data-row"><span class="data-label">Username PPPoE</span><span class="data-value" id="det-pppoe">-</span></div>
-                    <div class="data-row"><span class="data-label">Password PPPoE</span><span class="data-value">*** <span style="font-size:10px; cursor:pointer; color:var(--cyan);" onclick="openEditModal()">[Edit]</span></span></div>
+                    <div class="data-row"><span class="data-label">Password PPPoE</span><span class="data-value">***</span></div>
                 </div>
 
                 <div class="section-title">BILLING</div>
@@ -203,8 +204,11 @@
     <!-- Add/Edit Customer Form -->
     <div id="modal-form" class="modal">
         <div class="modal-content">
-            <div class="sheet-handle" onclick="closeModal('modal-form')"></div>
-            <h3 id="form-title" style="margin-bottom:20px; font-weight:800; color:var(--navy);">Customer Baru</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; margin-bottom:20px;">
+                <button class="btn-back" type="button" onclick="closeModal('modal-form')">← Batal</button>
+                <h3 id="form-title" style="font-weight:800; color:var(--navy); margin:0;">Customer Baru</h3>
+            </div>
+            
             <form id="customer-form">
                 <input type="hidden" id="form-id">
                 
@@ -221,7 +225,7 @@
                 <div class="input-group"><input type="number" id="cust-price" placeholder="Harga Bulanan (cth: 150000)" required></div>
                 <div class="input-group"><input type="number" id="cust-due" placeholder="Tanggal Jatuh Tempo (1-31)" min="1" max="31" required></div>
                 
-                <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top:15px;">CREATE CUSTOMER</button>
+                <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top:15px;">SIMPAN CUSTOMER</button>
             </form>
         </div>
     </div>
@@ -229,9 +233,11 @@
     <!-- Payment Confirmation -->
     <div id="modal-pay" class="modal">
         <div class="modal-content">
-            <div class="sheet-handle" onclick="closeModal('modal-pay')"></div>
-            <h3 style="margin-bottom:5px; font-weight:800; color:var(--navy);">Payment Confirmation</h3>
-            <p id="pay-cust-name" style="font-weight:600; color:var(--text-muted); margin-bottom:20px;">-</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; margin-bottom:20px;">
+                <button class="btn-back" type="button" onclick="closeModal('modal-pay')">← Batal</button>
+                <h3 style="font-weight:800; color:var(--navy); margin:0;">Payment</h3>
+            </div>
+            <p id="pay-cust-name" style="font-weight:600; color:var(--text-muted); margin-bottom:20px; text-align:center;">-</p>
             
             <form id="payment-form">
                 <input type="hidden" id="pay-id">
@@ -245,7 +251,6 @@
                     <option value="Cash">Tunai / Cash</option>
                     <option value="Transfer">Transfer Bank</option>
                     <option value="QRIS">QRIS</option>
-                    <option value="E-Wallet">E-Wallet</option>
                 </select>
                 
                 <button type="submit" class="btn-primary" style="background:var(--navy);">CONFIRM PAYMENT</button>
@@ -253,11 +258,18 @@
         </div>
     </div>
 
-    <!-- Success Check Animasi -->
-    <div id="success-anim" class="modal" style="background:rgba(255,255,255,0.9);">
-        <div style="text-align:center;">
+    <!-- Success Receipt Modal -->
+    <div id="success-anim" class="modal">
+        <div class="modal-content" style="padding-top:40px; text-align:center;">
             <div style="width:80px; height:80px; background:var(--success); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:40px; margin:0 auto 15px auto;">✓</div>
-            <h2 style="color:var(--navy); font-weight:800;">Payment Successful</h2>
+            <h2 style="color:var(--navy); font-weight:800; margin-bottom:5px;">Payment Successful</h2>
+            <p style="color:var(--text-muted); font-size:14px; margin-bottom:25px;">Pelunasan berhasil dicatat di sistem.</p>
+            
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="btn-primary" id="btn-wa-receipt" style="background:#25D366; flex:1;">💬 Kirim WA</button>
+                <button class="btn-primary" onclick="printReceipt()" style="background:var(--navy); flex:1;">🖨️ Print Struk</button>
+            </div>
+            <button class="btn-back" style="width:100%; justify-content:center; padding:15px; color:var(--text-muted);" onclick="closeModal('success-anim')">Tutup</button>
         </div>
     </div>
 
