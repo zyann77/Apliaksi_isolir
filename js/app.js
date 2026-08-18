@@ -141,7 +141,7 @@ function renderCustomerList(data) {
     });
 }
 
-// DASHBOARD CALCULATIONS (SISTEM ANTI MELESET 1000%)
+// DASHBOARD CALCULATIONS
 function calcDashboard() {
     let tAct = 0, tIso = 0, outstanding = 0, unpaidCount = 0;
     
@@ -237,7 +237,7 @@ function renderInvoiceList() {
     document.getElementById('count-today').innerText = countToday;
 }
 
-// OPEN BOTTOM SHEET DETAIL (DUA SLIDE TABS)
+// OPEN BOTTOM SHEET DETAIL
 function openDetail(id) {
     activeCust = globalCustomers.find(c => String(c.id) === String(id));
     if(!activeCust) return;
@@ -284,7 +284,11 @@ function openDetail(id) {
     document.getElementById('detail-sheet').classList.add('active');
 }
 
-function closeDetailScreen() { document.getElementById('detail-sheet').classList.remove('active'); activeCust = null;}
+// PENYEBAB ERROR TADI ADA DI SINI. FUNGSI INI MEMBUAT activeCust JADI NULL.
+function closeDetailScreen() { 
+    document.getElementById('detail-sheet').classList.remove('active'); 
+    activeCust = null; 
+}
 
 function kirimInvoiceWA() {
     let msg = document.getElementById('preview-invoice').innerText;
@@ -363,17 +367,27 @@ document.getElementById('customer-form').addEventListener('submit', async (e) =>
     }
 });
 
-// MODAL BAYAR
+// MODAL BAYAR (PERBAIKAN ERROR MENTAL)
 function bukaModalBayar() {
     if(!activeCust) return;
+    
+    // 🔥 AMANKAN DATA DULU SEBELUM LAYAR DITUTUP 🔥
+    let idToPay = activeCust.id;
+    let nameToPay = activeCust.name + " — " + (activeCust.packages?.ppp_profile || '');
+    let amountToPay = activeCust.packages?.price || 0;
+
+    // BARU TUTUP LAYARNYA (yang bikin activeCust jadi null)
     closeDetailScreen();
-    document.getElementById('pay-id').value = activeCust.id;
-    document.getElementById('pay-cust-name').innerText = activeCust.name + " — " + (activeCust.packages?.ppp_profile || '');
-    document.getElementById('pay-amount').value = activeCust.packages?.price || 0;
+
+    // MASUKKAN DATA YANG SUDAH DIAMANKAN KE DALAM FORM
+    document.getElementById('pay-id').value = idToPay;
+    document.getElementById('pay-cust-name').innerText = nameToPay;
+    document.getElementById('pay-amount').value = amountToPay;
+    
     openModal('modal-pay');
 }
 
-// 🚀 FUNGSI BARU: PROSES PEMBAYARAN ANTI MENTAL (ONCLICK DIRECT)
+// PROSES PEMBAYARAN
 async function prosesPembayaran() {
     let btn = document.getElementById('btn-confirm-pay');
     btn.innerText = "MEMPROSES...";
@@ -388,7 +402,6 @@ async function prosesPembayaran() {
         let d = new Date();
         let billingPeriod = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
 
-        // 1. Simpan Pembayaran ke Database
         const { error } = await db.from('payments').insert([{ 
             customer_id: id, 
             amount: amt, 
@@ -396,9 +409,8 @@ async function prosesPembayaran() {
             billing_period: billingPeriod
         }]);
         
-        if (error) throw error; // Kalau database gagal, akan langsung lempar ke Catch
+        if (error) throw error; 
         
-        // 2. Buka Isolir (Jika sedang terisolir)
         if(cust && cust.isolation_status === 'ISOLATED') {
             try {
                 await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
@@ -413,16 +425,12 @@ async function prosesPembayaran() {
         }
 
         closeModal('modal-pay');
-        
-        // PESAN SUKSES!
         alert("💰 SUKSES! Pembayaran berhasil tercatat di sistem.");
         
-        // Refresh Data dan Tampilan
         await initData();
         activeCust = globalCustomers.find(c => String(c.id) === String(id));
         if(activeCust) {
             openDetail(id);
-            // Otomatis buka Tab Nota WhatsApp
             setTimeout(() => { document.querySelectorAll('.s-tab')[1].click(); }, 300);
         }
 
