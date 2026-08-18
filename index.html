@@ -44,12 +44,17 @@
         .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; }
         .stat-card h3 { font-size: 24px; font-weight: 700; }
         .stat-card.success h3 { color: var(--primary); }
+        .stat-card.danger h3 { color: var(--danger); }
 
         /* Customers */
         .action-bar { display: flex; gap: 10px; margin-bottom: 15px; }
         .action-bar input { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
         .customer-card { background: var(--card-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
         
+        /* Tombol Aksi Manual Isolir */
+        .btn-isolir { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-buka { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
         /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); }
         .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 11px; font-weight: 500; cursor: pointer; }
@@ -103,6 +108,10 @@
                         <span class="stat-label">AKTIF</span>
                         <h3 id="stat-active">0</h3>
                     </div>
+                    <div class="stat-card danger" style="grid-column: span 2;">
+                        <span class="stat-label">TERISOLIR</span>
+                        <h3 id="stat-isolated">0</h3>
+                    </div>
                 </div>
             </section>
 
@@ -110,7 +119,6 @@
             <section id="view-customers" class="view">
                 <div class="action-bar">
                     <input type="text" id="search-customer" placeholder="Cari pelanggan...">
-                    <!-- ID btn-add-customer DITAMBAHKAN DI SINI -->
                     <button id="btn-add-customer" class="btn-primary" style="width: auto; padding: 10px 15px;">+ Tambah</button>
                 </div>
                 <div id="customer-list">
@@ -214,7 +222,7 @@
             });
         });
 
-        // LOGIC BUKA/TUTUP MODAL TAMBAH PELANGGAN
+        // MODAL TAMBAH PELANGGAN
         document.getElementById('btn-add-customer').addEventListener('click', function() {
             document.getElementById('modal-customer').classList.add('active');
         });
@@ -222,7 +230,7 @@
             document.getElementById('modal-customer').classList.remove('active');
         });
 
-        // SIMPAN PELANGGAN KE SUPABASE
+        // SIMPAN PELANGGAN KE SUPABASE (SUDAH DI-FIX BOOLEAN & CUSTOMER CODE)
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
             var btnSave = document.getElementById('btn-save-cust');
@@ -235,18 +243,18 @@
             var pass = document.getElementById('cust-pass').value;
             var due = document.getElementById('cust-due').value;
 
-            // Generate Kode Pelanggan Otomatis (Contoh: NET-123456)
+            // Generate Kode Pelanggan
             var randomCode = "NET-" + Math.floor(100000 + Math.random() * 900000);
 
             try {
                 var { error } = await db.from('customers').insert([{
-                    customer_code: randomCode, // <-- Ini tambahan wajibnya bos
+                    customer_code: randomCode,
                     name: nama,
                     phone: hp,
                     pppoe_username: user,
                     pppoe_password: pass,
                     due_date: parseInt(due),
-                    isolation_status: 'NORMAL' // Status awal
+                    isolation_status: false // FALSE artinya NORMAL (Sesuai tipe Boolean di DB)
                 }]);
 
                 if (error) throw error;
@@ -262,8 +270,54 @@
                 btnSave.disabled = false;
             }
         });
-        
-        // LOAD DATA PELANGGAN DARI SUPABASE
+
+        // FUNGSI MANUAL ISOLIR (UPDATE STATUS DATABASE & MIKROTIK)
+        async function setStatusIsolir(customerId, pppoeUser, makeIsolated) {
+            // makeIsolated bernilai true (isolir) atau false (normal)
+            var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
+            var konfirmasi = confirm(`Yakin ingin mengubah status pelanggan ini menjadi ${actionText}?`);
+            if (!konfirmasi) return;
+
+            try {
+                alert("Sedang menghubungi MikroTik bos... Mohon tunggu.");
+                
+                // Tembak ke Supabase Edge Function
+                const response = await fetch('https://ufvwxdjpmetpvogtvnxj.supabase.co/functions/v1/mikrotik', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+                    },
+                    body: JSON.stringify({
+                        pppoe_username: pppoeUser,
+                        action: actionText 
+                    })
+                });
+
+                const resultMikrotik = await response.json();
+                
+                if (resultMikrotik.error) {
+                    alert("Gagal konek ke MikroTik: " + resultMikrotik.error);
+                    return; 
+                }
+
+                // Jika sukses di MikroTik, update Supabase pakai Boolean (true/false)
+                var { error } = await db.from('customers')
+                    .update({ isolation_status: makeIsolated })
+                    .eq('id', customerId);
+
+                if (error) throw error;
+
+                alert(`Mantap! Pelanggan berhasil diubah menjadi ${actionText}.`);
+                
+                // Refresh data
+                loadCustomers();
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        // LOAD DATA PELANGGAN
         async function loadCustomers() {
             var list = document.getElementById('customer-list');
             list.innerHTML = '<p style="text-align:center; color:gray; padding:20px;">Memuat data dari Supabase...</p>';
@@ -280,29 +334,50 @@
                     list.innerHTML = '<div style="text-align:center; padding:20px; font-size:14px; color:gray;">Belum ada data pelanggan di database.</div>';
                     document.getElementById('stat-total').innerText = 0;
                     document.getElementById('stat-active').innerText = 0;
+                    document.getElementById('stat-isolated').innerText = 0;
                     return;
                 }
 
                 list.innerHTML = '';
                 var totalActive = 0;
+                var totalIsolated = 0;
 
                 customers.forEach(function(cust) {
-                    if(cust.connection_status === 'ACTIVE') totalActive++;
+                    // Karena di database berbentuk boolean, kita cek jika nilainya true
+                    var isIsolated = cust.isolation_status === true || cust.isolation_status === 'true';
                     
-                    var statusColor = cust.isolation_status === 'ISOLATED' ? 'red' : 'green';
+                    var statusColor = isIsolated ? 'red' : 'green';
+                    var statusTextDisplay = isIsolated ? 'ISOLATED' : 'NORMAL';
+                    
+                    if(isIsolated) {
+                        totalIsolated++;
+                    } else {
+                        totalActive++;
+                    }
+
+                    // Logika tombol: Jika isIsolated=true, munculkan tombol BUKA (false). Sebaliknya ISOLIR (true).
+                    var actionButton = isIsolated 
+                        ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false)" class="btn-buka">BUKA ISOLIR</button>`
+                        : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true)" class="btn-isolir">ISOLIR</button>`;
+
                     list.innerHTML += `
                         <div class="customer-card">
                             <div>
                                 <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
                                 <small style="color: gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
-                                <small style="color: ${statusColor}; font-weight: bold;">● ${cust.isolation_status}</small>
+                                <small style="color: ${statusColor}; font-weight: bold;">● ${statusTextDisplay}</small>
+                            </div>
+                            <div>
+                                ${actionButton}
                             </div>
                         </div>
                     `;
                 });
                 
+                // Update Dashboard Stats
                 document.getElementById('stat-total').innerText = customers.length;
                 document.getElementById('stat-active').innerText = totalActive;
+                document.getElementById('stat-isolated').innerText = totalIsolated;
 
             } catch (err) {
                 list.innerHTML = `<div style="color:red; font-size:12px; background:#fee2e2; padding:10px; border-radius:8px;"><b>Error Supabase:</b> ${err.message}</div>`;
