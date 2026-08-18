@@ -1,104 +1,113 @@
-// 1. Inisialisasi Supabase (PENTING: Gunakan Anon Key, BUKAN Service Key di JS!)
-const SUPABASE_URL = 'https://XYZ.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhb...'; 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const app = {
+    init() {
+        this.runSplashSequence();
+    },
 
-// 2. Navigasi SPA Ala iOS
-document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
+    runSplashSequence() {
+        const terminal = document.getElementById('splash-terminal');
+        const lines = [
+            "> INITIALIZING SYSTEM...",
+            "> CONNECTING DATABASE...",
+            "> LOADING MIKROTIK CONTROL...",
+            "> SECURITY CHECK...",
+            "> SYSTEM READY"
+        ];
         
-        // Hapus status active dari nav
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-        item.classList.add('active');
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i < lines.length) {
+                terminal.innerHTML += `<div>${lines[i]}</div>`;
+                i++;
+            } else {
+                clearInterval(interval);
+                setTimeout(() => {
+                    terminal.classList.add('hidden');
+                    document.getElementById('splash-brand').classList.remove('hidden');
+                    
+                    // Transisi ke Login
+                    setTimeout(() => {
+                        document.getElementById('splash').classList.remove('active');
+                        document.getElementById('splash').classList.add('hidden');
+                        document.getElementById('login-view').classList.remove('hidden');
+                    }, 1500);
+                }, 500);
+            }
+        }, 300);
+    },
+
+    login() {
+        // Simulasi Login (Akan dihubungkan dengan Supabase Auth)
+        document.getElementById('login-status').innerText = "SYSTEM: AUTHENTICATING...";
+        document.getElementById('login-status').classList.add('text-neon');
         
-        // Sembunyikan semua views
-        document.querySelectorAll('.view').forEach(view => {
-            view.classList.remove('active');
-            view.classList.add('hidden');
+        setTimeout(() => {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            this.startTerminalLog();
+            this.animateCounters();
+        }, 1000);
+    },
+
+    navigate(viewId) {
+        // Matikan semua view
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active', 'hidden'));
+        document.querySelectorAll('.page').forEach(page => {
+            if (page.id !== viewId) page.classList.add('hidden');
         });
         
-        // Tampilkan target view
-        const targetId = item.getAttribute('data-target');
-        const targetView = document.getElementById(targetId);
-        targetView.classList.remove('hidden');
-        
-        // Paksa reflow untuk trigger animasi CSS
-        void targetView.offsetWidth; 
-        targetView.classList.add('active');
-    });
-});
+        // Aktifkan view yang dipilih
+        document.getElementById(viewId).classList.remove('hidden');
+        document.getElementById(viewId).classList.add('active');
 
-// 3. Fetch Data Dashboard Realtime
-async function loadDashboardStats() {
-    try {
-        // Ambil jumlah total pelanggan
-        const { count: total, error } = await supabase
-            .from('customers')
-            .select('*', { count: 'exact', head: true });
-            
-        if (!error) document.getElementById('stat-total').innerText = total;
+        // Update Bottom Nav UI
+        document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    },
 
-        // Animasikan angka naik (Counter Animation)
-        animateValue("stat-total", 0, total, 1000);
+    startTerminalLog() {
+        const logBox = document.getElementById('system-log');
+        const logs = [
+            "DATABASE CONNECTED",
+            "MIKROTIK ONLINE",
+            "CLIENT DATABASE SYNC",
+            "AUTO ISOLATION READY",
+            "SYSTEM MONITORING..."
+        ];
         
-    } catch (error) {
-        console.error("Gagal load data:", error);
+        let index = 0;
+        setInterval(() => {
+            if (index < logs.length) {
+                const time = new Date().toLocaleTimeString('id-ID');
+                const logEntry = document.createElement('div');
+                logEntry.innerText = `[${time}] > ${logs[index]}`;
+                logBox.appendChild(logEntry);
+                logBox.scrollTop = logBox.scrollHeight;
+                index++;
+            }
+        }, 1000);
+    },
+
+    animateCounters() {
+        // Contoh animasi counting
+        this.countUp('stat-total', 128);
+        this.countUp('stat-active', 121);
+        this.countUp('stat-warning', 4);
+        this.countUp('stat-isolated', 3);
+    },
+
+    countUp(elementId, target) {
+        let current = 0;
+        const el = document.getElementById(elementId);
+        const inc = Math.ceil(target / 20);
+        const timer = setInterval(() => {
+            current += inc;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            el.innerText = current;
+        }, 50);
     }
-}
+};
 
-// 4. Fitur Auto-Isolir (Panggilan ke Edge Function, BUKAN database langsung)
-async function triggerManualIsolir(customerId) {
-    try {
-        // Panggil proxy Edge Function agar credential aman
-        const { data, error } = await supabase.functions.invoke('mikrotik-api', {
-            body: { action: 'ISOLATE', customerId: customerId }
-        });
-
-        if (error) throw error;
-        
-        alert("Berhasil mengisolir pelanggan!");
-        // Refresh UI
-    } catch (error) {
-        alert("Gagal menghubungi MikroTik: " + error.message);
-    }
-}
-
-// 5. Integrasi WhatsApp (Format Pesan)
-function kirimWA(nomorHP, nama, tagihan, tglJatuhTempo) {
-    // Format ke internasional jika berawalan 0
-    let no = nomorHP.startsWith('0') ? '62' + nomorHP.slice(1) : nomorHP;
-    let pesan = `Halo *${nama}*, kami mengingatkan bahwa layanan internet Anda dengan tagihan Rp${tagihan} telah melewati batas waktu (${tglJatuhTempo}). Layanan Anda saat ini kami isolir sementara. Silakan hubungi kami untuk konfirmasi pembayaran.`;
-    
-    let url = `https://wa.me/${no}?text=${encodeURIComponent(pesan)}`;
-    window.open(url, '_blank');
-}
-
-// Utils: Animasi Angka
-function animateValue(id, start, end, duration) {
-    if (start === end) return;
-    let range = end - start;
-    let current = start;
-    let increment = end > start ? 1 : -1;
-    let stepTime = Math.abs(Math.floor(duration / range));
-    let obj = document.getElementById(id);
-    let timer = setInterval(function() {
-        current += increment;
-        obj.innerHTML = current;
-        if (current == end) {
-            clearInterval(timer);
-        }
-    }, stepTime);
-}
-
-// Init
-document.addEventListener("DOMContentLoaded", () => {
-    loadDashboardStats();
-    
-    // Set Jam Digital
-    setInterval(() => {
-        const now = new Date();
-        const options = { weekday: 'long', day: 'numeric', month: 'short' };
-        document.getElementById('realtime-date').innerText = now.toLocaleDateString('id-ID', options);
-    }, 1000);
-});
+window.onload = () => app.init();
