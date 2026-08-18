@@ -11,6 +11,7 @@ let activeCust = null;
 document.addEventListener("DOMContentLoaded", () => {
     if (localStorage.getItem("isLoggedIn") === "true") {
         document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('app-screen').classList.add('active'); // <-- INI YANG TADI KETINGGALAN BOS 😂
         initData();
     }
 });
@@ -20,6 +21,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     if (document.getElementById('username').value === "admin" && document.getElementById('password').value === "1234") {
         localStorage.setItem("isLoggedIn", "true"); 
         document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('app-screen').classList.add('active'); // <-- INI JUGA KETINGGALAN
         initData(); 
     } else {
         document.getElementById('pesan-error').style.display = 'block';
@@ -80,7 +82,8 @@ function renderCustomerList(data) {
     list.innerHTML = '';
     data.forEach(cust => {
         let isIso = cust.isolation_status === 'ISOLATED';
-        let avatar = cust.name.charAt(0).toUpperCase() + cust.name.charAt(1).toUpperCase();
+        let avatar = cust.name.charAt(0).toUpperCase();
+        if(cust.name.length > 1) avatar += cust.name.charAt(1).toUpperCase();
         
         list.innerHTML += `
             <div class="cust-card" onclick="openDetail('${cust.id}')">
@@ -155,7 +158,7 @@ function renderInvoiceList(currMonth) {
                     <div class="cc-name">${cust.name}</div>
                     <div style="font-size:11px; font-weight:800; color:${statusColor};">● ${statusText}</div>
                 </div>
-                <div style="font-size:12px; color:var(--text-muted); font-weight:600;">${cust.packname} — ${formatRp(cust.harga)}</div>
+                <div style="font-size:12px; color:var(--text-muted); font-weight:600;">${cust.packname || '-'} — ${formatRp(cust.harga)}</div>
             </div>`;
     });
 }
