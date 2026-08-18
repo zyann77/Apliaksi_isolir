@@ -96,20 +96,14 @@ async function loadPackages() {
     if(selectEl) {
         selectEl.innerHTML = '<option value="">-- Pilih Paket Internet --</option>';
         globalPackages.forEach(p => {
-            selectEl.innerHTML += `<option value="${p.id}">${p.ppp_profile} — (Def: ${formatRp(p.price)})</option>`;
+            // 🔥 DI SINI BAGIAN YANG DIHAPUS (HANYA MENAMPILKAN NAMA PAKET) 🔥
+            selectEl.innerHTML += `<option value="${p.id}">${p.ppp_profile}</option>`;
         });
     }
 }
 
-// Otomatis isi harga saat pilih paket (Tapi tetap bisa diedit manual)
-document.getElementById('cust-package-id')?.addEventListener('change', function(e) {
-    let pkg = globalPackages.find(p => p.id === e.target.value);
-    if(pkg) document.getElementById('cust-price').value = pkg.price;
-});
-
 // MENGAMBIL PELANGGAN
 async function loadCustomers() {
-    // Ambil juga kolom "harga" dari tabel customers
     let { data, error } = await db.from('customers').select('*, packages(ppp_profile, price)').order('created_at', { ascending: false });
     if(error) console.error("Error Customers:", error);
     globalCustomers = data || [];
@@ -160,7 +154,7 @@ function renderCustomerList(dataToRender) {
         if(safeName.length > 1) avatar += safeName.charAt(1).toUpperCase();
         
         let packName = cust.packages ? cust.packages.ppp_profile : '-';
-        let packPrice = getCustPrice(cust); // Pakai fungsi helper
+        let packPrice = getCustPrice(cust);
 
         let payBadge = hasPaid 
             ? `<span style="font-size:10px; font-weight:800; color:var(--success); background:var(--cyan-light); padding:3px 8px; border-radius:6px; margin-top:5px; display:inline-block;">✓ LUNAS</span>`
@@ -334,7 +328,6 @@ function openDetail(id) {
 
     document.querySelectorAll('.s-tab')[0].click();
     
-    // Reset transform swipe sebelum dibuka
     document.getElementById('swipeable-sheet').style.transform = '';
     document.getElementById('detail-sheet').classList.add('active');
 }
@@ -345,22 +338,19 @@ function closeDetailScreen() {
     activeCust = null; 
 }
 
-// ==========================================
-// 🚀 FITUR BARU: SWIPE DOWN TO CLOSE (NATIVE APP FEEL)
-// ==========================================
+// SWIPE DOWN TO CLOSE
 let sheetContent = document.getElementById('swipeable-sheet');
 let startY = 0;
 let currentY = 0;
 let isDragging = false;
 
 sheetContent.addEventListener('touchstart', (e) => {
-    // Jangan izinkan swipe kalau lagi nge-scroll isi konten (kecuali scrollnya udah mentok atas)
     let contentDiv = e.target.closest('.sheet-content');
     if(contentDiv && contentDiv.scrollTop > 0) return; 
     
     startY = e.touches[0].clientY;
     isDragging = true;
-    sheetContent.style.transition = 'none'; // Matikan animasi biar nempel sama jari
+    sheetContent.style.transition = 'none'; 
 }, {passive: true});
 
 sheetContent.addEventListener('touchmove', (e) => {
@@ -368,7 +358,6 @@ sheetContent.addEventListener('touchmove', (e) => {
     currentY = e.touches[0].clientY;
     let deltaY = currentY - startY;
     
-    // Hanya bisa ditarik ke Bawah
     if (deltaY > 0) {
         sheetContent.style.transform = `translateY(${deltaY}px)`;
     }
@@ -380,13 +369,12 @@ sheetContent.addEventListener('touchend', (e) => {
     sheetContent.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1)';
     
     let deltaY = currentY - startY;
-    if (deltaY > 150) { // Kalau ditariknya cukup jauh ke bawah, TUTUP!
+    if (deltaY > 150) { 
         closeDetailScreen();
-    } else { // Kalau nanggung, pantulkan balik ke atas
+    } else { 
         sheetContent.style.transform = ''; 
     }
 });
-// ==========================================
 
 
 async function hapusPelanggan() {
@@ -438,7 +426,6 @@ function openEditModal() {
     document.getElementById('cust-pass').value = activeCust.pppoe_password || "";
     document.getElementById('cust-due').value = activeCust.due_date || "";
     
-    // Tarik Harga Manual
     document.getElementById('cust-price').value = getCustPrice(activeCust);
     
     closeDetailScreen(); 
@@ -454,7 +441,7 @@ document.getElementById('customer-form').addEventListener('submit', async (e) =>
         phone: document.getElementById('cust-phone').value,
         address: document.getElementById('cust-address').value,
         package_id: document.getElementById('cust-package-id').value, 
-        harga: parseInt(document.getElementById('cust-price').value), // INI HARGA MANUALNYA BOS
+        harga: parseInt(document.getElementById('cust-price').value),
         pppoe_username: document.getElementById('cust-user').value,
         pppoe_password: document.getElementById('cust-pass').value,
         due_date: parseInt(document.getElementById('cust-due').value)
