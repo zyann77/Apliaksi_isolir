@@ -8,6 +8,7 @@ let globalPayments = [];
 let globalPackages = [];
 let activeCust = null;
 let currentBillingFilter = 'semua';
+let currentCustomerFilter = 'semua'; // Filter khusus halaman pelanggan
 
 // AUTO LOGIN & AUTH
 document.addEventListener("DOMContentLoaded", () => {
@@ -69,6 +70,11 @@ async function initData() {
         await loadPackages(); 
         await Promise.all([loadCustomers(), loadPayments()]);
         calcDashboard();
+        
+        // Panggil filter pelanggan supaya label status di-refresh
+        let term = document.getElementById('search-customer').value.toLowerCase();
+        let data = globalCustomers.filter(c => String(c.name || '').toLowerCase().includes(term) || String(c.phone || '').includes(term));
+        renderCustomerList(data);
     } catch(e) { console.error("Error Initialize:", e); }
 }
 
@@ -94,7 +100,6 @@ async function loadCustomers() {
     let { data, error } = await db.from('customers').select('*, packages(ppp_profile, price)').order('created_at', { ascending: false });
     if(error) console.error("Error Customers:", error);
     globalCustomers = data || [];
-    renderCustomerList(globalCustomers);
 }
 
 // MENGAMBIL PEMBAYARAN
@@ -104,18 +109,53 @@ async function loadPayments() {
     globalPayments = data || [];
 }
 
-// RENDER CUSTOMERS
-function renderCustomerList(data) {
+// 🚀 FILTER HALAMAN PELANGGAN (LUNAS / BELUM BAYAR / SEMUA)
+function filterCustomer(type, el) {
+    currentCustomerFilter = type;
+    document.querySelectorAll('#view-customers .chip').forEach(c => c.classList.remove('active'));
+    if(el) el.classList.add('active');
+    
+    let term = document.getElementById('search-customer').value.toLowerCase();
+    let data = globalCustomers.filter(c => String(c.name || '').toLowerCase().includes(term) || String(c.phone || '').includes(term));
+    renderCustomerList(data);
+}
+
+// RENDER CUSTOMERS (DENGAN LABEL LUNAS/BELUM BAYAR & FILTER)
+function renderCustomerList(dataToRender) {
     let list = document.getElementById('customer-list');
     list.innerHTML = '';
-    data.forEach(cust => {
+    
+    let d = new Date();
+    let tahunBulanStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+
+    // Jalankan Filter Data
+    let filteredData = dataToRender.filter(cust => {
         let isIso = cust.isolation_status === 'ISOLATED';
+        let hasPaid = globalPayments.some(p => p.customer_id === cust.id && String(p.billing_period).includes(tahunBulanStr));
+        
+        if(currentCustomerFilter === 'aktif' && isIso) return false;
+        if(currentCustomerFilter === 'isolir' && !isIso) return false;
+        if(currentCustomerFilter === 'lunas' && !hasPaid) return false;
+        if(currentCustomerFilter === 'belum-bayar' && hasPaid) return false;
+        
+        return true;
+    });
+
+    filteredData.forEach(cust => {
+        let isIso = cust.isolation_status === 'ISOLATED';
+        let hasPaid = globalPayments.some(p => p.customer_id === cust.id && String(p.billing_period).includes(tahunBulanStr));
+        
         let safeName = String(cust.name || 'User');
         let avatar = safeName.charAt(0).toUpperCase();
         if(safeName.length > 1) avatar += safeName.charAt(1).toUpperCase();
         
         let packName = cust.packages ? cust.packages.ppp_profile : '-';
         let packPrice = cust.packages ? cust.packages.price : 0;
+
+        // Label Tagihan Bulan Ini
+        let payBadge = hasPaid 
+            ? `<span style="font-size:10px; font-weight:800; color:var(--success); background:var(--cyan-light); padding:3px 8px; border-radius:6px; margin-top:5px; display:inline-block;">✓ LUNAS</span>`
+            : `<span style="font-size:10px; font-weight:800; color:var(--danger); background:var(--danger-light); padding:3px 8px; border-radius:6px; margin-top:5px; display:inline-block;">! BELUM BAYAR</span>`;
         
         list.innerHTML += `
             <div class="cust-card" onclick="openDetail('${cust.id}')">
@@ -127,7 +167,10 @@ function renderCustomerList(data) {
                             <div class="cc-sub">WA ${cust.phone || '-'}</div>
                         </div>
                     </div>
-                    <div class="id-badge ${isIso ? 'isolated' : ''}">● ${isIso ? 'ISOLATED' : 'AKTIF'}</div>
+                    <div style="text-align:right;">
+                        <div class="id-badge ${isIso ? 'isolated' : ''}">● ${isIso ? 'ISOLATED' : 'AKTIF'}</div>
+                        ${payBadge}
+                    </div>
                 </div>
                 <div class="cc-mid">
                     <span class="cc-pack">${packName}</span>
@@ -284,10 +327,33 @@ function openDetail(id) {
     document.getElementById('detail-sheet').classList.add('active');
 }
 
-// PENYEBAB ERROR TADI ADA DI SINI. FUNGSI INI MEMBUAT activeCust JADI NULL.
 function closeDetailScreen() { 
     document.getElementById('detail-sheet').classList.remove('active'); 
     activeCust = null; 
+}
+
+// 🚀 FUNGSI BARU: HAPUS PELANGGAN (AMAN DARI ERROR CONSTRAINT)
+async function hapusPelanggan() {
+    if(!activeCust) return;
+    let confirmDelete = confirm(`⚠️ PERINGATAN!\n\nApakah bos yakin ingin MENGHAPUS pelanggan bernama ${activeCust.name} secara permanen?\n\nSemua riwayat tagihannya juga akan terhapus.`);
+    if(!confirmDelete) return;
+
+    let idToDelete = activeCust.id;
+    closeDetailScreen(); // Tutup layar duluan
+
+    try {
+        // 1. Hapus riwayat pembayaran dulu supaya Supabase tidak marah
+        await db.from('payments').delete().eq('customer_id', idToDelete);
+        
+        // 2. Baru hapus pelanggan utamanya
+        const { error } = await db.from('customers').delete().eq('id', idToDelete);
+        if (error) throw error;
+
+        alert("✅ Pelanggan berhasil dihapus permanen!");
+        initData(); // Reload seluruh sistem
+    } catch(err) {
+        alert("❌ Gagal menghapus pelanggan!\nDetail: " + err.message);
+    }
 }
 
 function kirimInvoiceWA() {
@@ -367,19 +433,16 @@ document.getElementById('customer-form').addEventListener('submit', async (e) =>
     }
 });
 
-// MODAL BAYAR (PERBAIKAN ERROR MENTAL)
+// MODAL BAYAR
 function bukaModalBayar() {
     if(!activeCust) return;
     
-    // 🔥 AMANKAN DATA DULU SEBELUM LAYAR DITUTUP 🔥
     let idToPay = activeCust.id;
     let nameToPay = activeCust.name + " — " + (activeCust.packages?.ppp_profile || '');
     let amountToPay = activeCust.packages?.price || 0;
 
-    // BARU TUTUP LAYARNYA (yang bikin activeCust jadi null)
     closeDetailScreen();
 
-    // MASUKKAN DATA YANG SUDAH DIAMANKAN KE DALAM FORM
     document.getElementById('pay-id').value = idToPay;
     document.getElementById('pay-cust-name').innerText = nameToPay;
     document.getElementById('pay-amount').value = amountToPay;
