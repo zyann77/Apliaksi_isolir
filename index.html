@@ -55,6 +55,17 @@
         .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 11px; font-weight: 500; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item .icon { font-size: 20px; margin-bottom: 4px; }
+
+        /* Modal Tambah Pelanggan */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 20px;}
+        .modal.active { display: flex; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; position: relative; animation: slideUp 0.3s ease-out; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .close-modal { cursor: pointer; font-size: 24px; font-weight: bold; color: var(--danger); line-height: 1;}
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600;}
+        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -99,7 +110,8 @@
             <section id="view-customers" class="view">
                 <div class="action-bar">
                     <input type="text" id="search-customer" placeholder="Cari pelanggan...">
-                    <button class="btn-primary" style="width: auto; padding: 10px 15px;">+ Tambah</button>
+                    <!-- ID btn-add-customer DITAMBAHKAN DI SINI -->
+                    <button id="btn-add-customer" class="btn-primary" style="width: auto; padding: 10px 15px;">+ Tambah</button>
                 </div>
                 <div id="customer-list">
                     <!-- Data pelanggan akan muncul di sini -->
@@ -121,14 +133,44 @@
         </nav>
     </div>
 
+    <!-- MODAL TAMBAH PELANGGAN -->
+    <div id="modal-customer" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah Pelanggan</h3>
+                <span class="close-modal" id="close-modal">&times;</span>
+            </div>
+            <form id="form-customer">
+                <div class="form-group">
+                    <label>Nama Pelanggan</label>
+                    <input type="text" id="cust-name" required>
+                </div>
+                <div class="form-group">
+                    <label>No. WhatsApp (Awali 62)</label>
+                    <input type="number" id="cust-phone" placeholder="Contoh: 628123456789" required>
+                </div>
+                <div class="form-group">
+                    <label>Username PPPoE</label>
+                    <input type="text" id="cust-user" required>
+                </div>
+                <div class="form-group">
+                    <label>Password PPPoE</label>
+                    <input type="text" id="cust-pass" required>
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Jatuh Tempo (Angka 1-31)</label>
+                    <input type="number" id="cust-due" min="1" max="31" required>
+                </div>
+                <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top: 10px;">Simpan Pelanggan</button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // ==========================================
-        // FIX: MENGGUNAKAN 'var' AGAR TIDAK ERROR BENTROK
-        // ==========================================
+        // INISIALISASI SUPABASE
         var SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
         
-        // Cek jika supabase belum dideklarasi untuk amankan dari error
         if (typeof window.supabaseClient === 'undefined') {
             window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
@@ -145,7 +187,6 @@
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('app-screen').classList.add('active');
                 pesanError.style.display = 'none';
-                
                 loadCustomers(); 
             } else {
                 pesanError.innerText = 'Username salah bos!';
@@ -171,6 +212,55 @@
                 
                 document.getElementById('page-title').innerText = targetBtn.dataset.title;
             });
+        });
+
+        // LOGIC BUKA/TUTUP MODAL TAMBAH PELANGGAN
+        document.getElementById('btn-add-customer').addEventListener('click', function() {
+            document.getElementById('modal-customer').classList.add('active');
+        });
+        document.getElementById('close-modal').addEventListener('click', function() {
+            document.getElementById('modal-customer').classList.remove('active');
+        });
+
+        // LOGIC SIMPAN PELANGGAN KE SUPABASE
+        document.getElementById('form-customer').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var btnSave = document.getElementById('btn-save-cust');
+            btnSave.innerText = "Menyimpan...";
+            btnSave.disabled = true;
+
+            var nama = document.getElementById('cust-name').value;
+            var hp = document.getElementById('cust-phone').value;
+            var user = document.getElementById('cust-user').value;
+            var pass = document.getElementById('cust-pass').value;
+            var due = document.getElementById('cust-due').value;
+
+            try {
+                // Insert ke tabel customers
+                var { error } = await db.from('customers').insert([{
+                    name: nama,
+                    phone: hp,
+                    pppoe_username: user,
+                    pppoe_password: pass,
+                    due_date: parseInt(due)
+                }]);
+
+                if (error) throw error;
+
+                alert("Mantap! Pelanggan berhasil ditambahkan.");
+                
+                // Reset form dan tutup modal
+                document.getElementById('form-customer').reset();
+                document.getElementById('modal-customer').classList.remove('active');
+                
+                // Refresh daftar pelanggan
+                loadCustomers();
+            } catch (err) {
+                alert("Gagal menyimpan: " + err.message + "\n(Pastikan Username PPPoE belum pernah dipakai pelanggan lain)");
+            } finally {
+                btnSave.innerText = "Simpan Pelanggan";
+                btnSave.disabled = false;
+            }
         });
 
         // LOAD DATA PELANGGAN DARI SUPABASE
@@ -215,7 +305,7 @@
                 document.getElementById('stat-active').innerText = totalActive;
 
             } catch (err) {
-                list.innerHTML = `<div style="color:red; font-size:12px; background:#fee2e2; padding:10px; border-radius:8px;"><b>Error Supabase:</b> ${err.message} <br><br><i>(Pastikan Anda sudah menjalankan SQL Policy di Supabase agar data bisa dibaca publik)</i></div>`;
+                list.innerHTML = `<div style="color:red; font-size:12px; background:#fee2e2; padding:10px; border-radius:8px;"><b>Error Supabase:</b> ${err.message}</div>`;
             }
         }
     </script>
