@@ -77,20 +77,6 @@ const formatRp = (angka) => "Rp " + (Number(angka) || 0).toLocaleString('id-ID')
 // MENGAMBIL DAFTAR PAKET
 async function loadPackages() {
     let { data, error } = await db.from('packages').select('*').eq('status', 'ACTIVE');
-    
-    if (!data || data.length === 0) {
-        const defaultPackages = [
-            { name: 'Paket 10 Mbps', speed: '10 Mbps', price: 150000, ppp_profile: 'profile1-10mbps', status: 'ACTIVE' },
-            { name: 'Paket 20 Mbps', speed: '20 Mbps', price: 200000, ppp_profile: 'profile2-20mbps', status: 'ACTIVE' },
-            { name: 'Paket 50 Mbps', speed: '50 Mbps', price: 300000, ppp_profile: 'profile3-50mbps', status: 'ACTIVE' },
-            { name: 'Paket 7 Mbps', speed: '7 Mbps', price: 100000, ppp_profile: 'profile4-7mbps', status: 'ACTIVE' },
-            { name: 'Profile 5', speed: 'Custom', price: 50000, ppp_profile: 'profile5', status: 'ACTIVE' }
-        ];
-        await db.from('packages').insert(defaultPackages);
-        let res = await db.from('packages').select('*').eq('status', 'ACTIVE');
-        data = res.data || [];
-    }
-
     if(error) console.error("Error Packages:", error);
     globalPackages = data || [];
     
@@ -155,43 +141,42 @@ function renderCustomerList(data) {
     });
 }
 
-// DASHBOARD CALCULATIONS (SISTEM ANTI MELESET)
+// DASHBOARD CALCULATIONS (SISTEM ANTI MELESET 1000%)
 function calcDashboard() {
     let tAct = 0, tIso = 0, outstanding = 0, unpaidCount = 0;
     
     // Tarik Waktu Saat Ini
     let d = new Date();
-    // Bikin string patokan bulan tagihan: contoh "2026-08-01"
-    let currentBillingStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
-    // Bikin string patokan hari ini: contoh "2026-08-18"
-    let todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    // Bikin string patokan HANYA BULAN & TAHUN (contoh "2026-08") biar 100% cocok!
+    let tahunBulanStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    let hariIniStr = `${tahunBulanStr}-${String(d.getDate()).padStart(2,'0')}`; // "2026-08-18"
     
     globalCustomers.forEach(c => {
         c.isolation_status === 'ISOLATED' ? tIso++ : tAct++;
-        // Cek pembayaran dengan mencocokkan kolom billing_period yang pasti sama string-nya
-        let hasPaid = globalPayments.some(p => p.customer_id === c.id && p.billing_period === currentBillingStr);
-        if(!hasPaid) { outstanding += (Number(c.packages?.price) || 0); unpaidCount++; }
+        
+        // Mengecek apakah di tabel payments ada text yang MENGANDUNG "2026-08" untuk pelanggan ini
+        let hasPaid = globalPayments.some(p => p.customer_id === c.id && String(p.billing_period).includes(tahunBulanStr));
+        
+        if(!hasPaid) { 
+            outstanding += (Number(c.packages?.price) || 0); 
+            unpaidCount++; 
+        }
     });
     
     let income = 0, incomeToday = 0;
     
     globalPayments.forEach(p => { 
-        // Kalau tagihannya buat bulan ini, tambahkan ke Pendapatan Bulan Ini
-        if (p.billing_period === currentBillingStr) {
-            income += parseFloat(p.amount);
+        let amt = parseFloat(p.amount) || 0;
+        let tglBayar = p.payment_date || p.created_at || "";
+        
+        // Kalau tanggal bayar mengandung "2026-08" (Berarti bayar bulan ini)
+        if (tglBayar.includes(tahunBulanStr)) {
+            income += amt;
         }
         
-        // Cek tanggal masuknya uang pakai split 'T' biar aman dari timezone
-        let pDateStr = "";
-        if (p.payment_date) {
-            pDateStr = p.payment_date.split('T')[0];
-        } else if (p.created_at) {
-            pDateStr = p.created_at.split('T')[0];
-        }
-
-        // Kalau tanggal masuk uang sama dengan hari ini, tambahkan ke Pendapatan Hari Ini
-        if (pDateStr === todayStr) {
-            incomeToday += parseFloat(p.amount);
+        // Kalau tanggal bayar mengandung "2026-08-18" (Berarti bayar HARI INI)
+        if (tglBayar.includes(hariIniStr)) {
+            incomeToday += amt;
         }
     });
 
@@ -225,13 +210,15 @@ function filterBilling(type, el) {
 function renderInvoiceList() {
     let list = document.getElementById('invoice-list');
     list.innerHTML = '';
+    
     let d = new Date();
-    let currentBillingStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    let tahunBulanStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     let todayDate = d.getDate();
     let countToday = 0;
 
     globalCustomers.forEach(cust => {
-        let hasPaid = globalPayments.some(p => p.customer_id === cust.id && p.billing_period === currentBillingStr);
+        // Cek lagi pencocokannya pakai includes() supaya aman
+        let hasPaid = globalPayments.some(p => p.customer_id === cust.id && String(p.billing_period).includes(tahunBulanStr));
         if(hasPaid) return; 
         
         let dueDateNum = Number(cust.due_date);
@@ -406,8 +393,8 @@ document.getElementById('payment-form').addEventListener('submit', async (e) => 
     let method = document.getElementById('pay-method').value;
     let cust = globalCustomers.find(c => String(c.id) === String(id));
     
-    // FORMAT TANGGAL PASTIKAN BENAR (YYYY-MM-01)
     let d = new Date();
+    // BIKIN TANGGAL YANG 100% AMAN (Contoh "2026-08-01")
     let billingPeriod = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
 
     try {
