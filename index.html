@@ -3,83 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NET//CONTROL</title>
+    <title>KONTOL.NET</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Load Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
-        /* CSS Variables & Reset */
-        :root { --bg-color: #f4f6f8; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --primary: #10b981; --primary-dark: #059669; --danger: #ef4444; --warning: #f59e0b; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        :root { --bg-color: #f4f6f8; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --primary: #10b981; --primary-dark: #059669; --danger: #ef4444; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
-
-        /* Screens */
         .screen { display: none; height: 100vh; width: 100vw; overflow: hidden; flex-direction: column; }
         .screen.active { display: flex; }
-
-        /* Login Box */
         .login-box { margin: auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); width: 90%; max-width: 400px; text-align: center; }
         .logo { font-weight: 800; font-size: 28px; }
         .logo span { color: var(--primary); }
         .subtitle { color: var(--text-muted); margin-bottom: 20px; font-size: 14px; }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; text-align: center; font-weight: bold;}
         .btn-primary { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
-        .btn-primary:active { background: var(--primary-dark); transform: scale(0.98); }
-
-        /* App Header */
         .app-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--card-bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
         .app-header h2 { font-size: 18px; font-weight: 600; }
         .btn-logout { background: var(--danger); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; }
-
-        /* Main Content */
         .app-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
         .view { display: none; }
         .view.active { display: block; }
-
-        /* Dashboard Stats */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;}
         .stat-card { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); }
         .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; }
         .stat-card h3 { font-size: 24px; font-weight: 700; }
         .stat-card.success h3 { color: var(--primary); }
         .stat-card.danger h3 { color: var(--danger); }
-
-        /* Customers */
         .action-bar { display: flex; gap: 10px; margin-bottom: 15px; }
         .action-bar input { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
         .customer-card { background: var(--card-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
         
-        /* Tombol Aksi Manual Isolir */
+        /* TOMBOL-TOMBOL AKSI */
         .btn-isolir { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .btn-buka { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-hapus { background: #64748b; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; margin-left: 5px; } /* Warna abu-abu gelap */
+        .btn-group { display: flex; align-items: center; }
 
-        /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); }
         .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 11px; font-weight: 500; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item .icon { font-size: 20px; margin-bottom: 4px; }
-
-        /* Modal Tambah Pelanggan */
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 20px;}
         .modal.active { display: flex; }
-        .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 20px; position: relative; animation: slideUp 0.3s ease-out; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 20px; position: relative; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .close-modal { cursor: pointer; font-size: 24px; font-weight: bold; color: var(--danger); line-height: 1;}
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600;}
         .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
-
-    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="screen active">
         <div class="login-box">
-            <h1 class="logo">NET<span>//</span>CONTROL</h1>
-            <p class="subtitle">Admin Management System</p>
+            <h1 class="logo">KONTOL<span>is</span>NET</h1>
+            <p class="subtitle">Yonkjhunz</p>
             <form id="login-form">
                 <input type="text" id="username" placeholder="Masukkan Username" required autocomplete="off">
                 <button type="submit" id="btn-login" class="btn-primary">MASUK</button>
@@ -88,16 +67,12 @@
         </div>
     </div>
 
-    <!-- APP SCREEN -->
     <div id="app-screen" class="screen">
         <header class="app-header">
             <h2 id="page-title">Dashboard</h2>
             <button class="btn-logout" id="btn-logout">OUT</button>
         </header>
-
         <main class="app-content">
-            
-            <!-- VIEW: DASHBOARD -->
             <section id="view-dashboard" class="view active">
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -114,34 +89,24 @@
                     </div>
                 </div>
             </section>
-
-            <!-- VIEW: PELANGGAN -->
             <section id="view-customers" class="view">
                 <div class="action-bar">
                     <input type="text" id="search-customer" placeholder="Cari pelanggan...">
                     <button id="btn-add-customer" class="btn-primary" style="width: auto; padding: 10px 15px;">+ Tambah</button>
                 </div>
-                <div id="customer-list">
-                    <!-- Data pelanggan akan muncul di sini -->
-                </div>
+                <div id="customer-list"></div>
             </section>
-
         </main>
-
-        <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-target="view-dashboard" data-title="Dashboard">
-                <span class="icon">📊</span>
-                <span class="label">Dashboard</span>
+                <span class="icon">📊</span><span class="label">Dashboard</span>
             </button>
             <button class="nav-item" data-target="view-customers" data-title="Pelanggan">
-                <span class="icon">👥</span>
-                <span class="label">Pelanggan</span>
+                <span class="icon">👥</span><span class="label">Pelanggan</span>
             </button>
         </nav>
     </div>
 
-    <!-- MODAL TAMBAH PELANGGAN -->
     <div id="modal-customer" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -149,242 +114,160 @@
                 <span class="close-modal" id="close-modal">&times;</span>
             </div>
             <form id="form-customer">
-                <div class="form-group">
-                    <label>Nama Pelanggan</label>
-                    <input type="text" id="cust-name" required>
-                </div>
-                <div class="form-group">
-                    <label>No. WhatsApp (Awali 62)</label>
-                    <input type="number" id="cust-phone" placeholder="Contoh: 628123456789" required>
-                </div>
-                <div class="form-group">
-                    <label>Nama Paket (Contoh: Gold 20 Mbps)</label>
-                    <input type="text" id="cust-package" required>
-                </div>
-                <!-- TAMBAHAN BARU: HARGA PAKET -->
-                <div class="form-group">
-                    <label>Harga Paket (Angka saja, Contoh: 150000)</label>
-                    <input type="number" id="cust-price" required>
-                </div>
-                <div class="form-group">
-                    <label>Username PPPoE</label>
-                    <input type="text" id="cust-user" required>
-                </div>
-                <div class="form-group">
-                    <label>Password PPPoE</label>
-                    <input type="text" id="cust-pass" required>
-                </div>
-                <div class="form-group">
-                    <label>Tanggal Jatuh Tempo (Angka 1-31)</label>
-                    <input type="number" id="cust-due" min="1" max="31" required>
-                </div>
+                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required></div>
+                <div class="form-group"><label>No. WhatsApp (Awali 62)</label><input type="number" id="cust-phone" required></div>
+                <div class="form-group"><label>Nama Paket (Contoh: Gold 20 Mbps)</label><input type="text" id="cust-package" required></div>
+                <div class="form-group"><label>Harga Paket</label><input type="number" id="cust-price" required></div>
+                <div class="form-group"><label>Username PPPoE</label><input type="text" id="cust-user" required></div>
+                <div class="form-group"><label>Password PPPoE</label><input type="text" id="cust-pass" required></div>
+                <div class="form-group"><label>Tanggal Jatuh Tempo (1-31)</label><input type="number" id="cust-due" min="1" max="31" required></div>
                 <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top: 10px;">Simpan Pelanggan</button>
             </form>
         </div>
     </div>
 
     <script>
-        // INISIALISASI SUPABASE
         var SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
-        
-        if (typeof window.supabaseClient === 'undefined') {
-            window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
+        if (typeof window.supabaseClient === 'undefined') { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
         var db = window.supabaseClient;
 
-        // LOGIC LOGIN MANUAL
-        var USERNAME_VALID = "admin123"; 
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            var inputUsername = document.getElementById('username').value;
-            var pesanError = document.getElementById('pesan-error');
-            
-            if (inputUsername === USERNAME_VALID) {
+            if (document.getElementById('username').value === "admin123") {
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('app-screen').classList.add('active');
-                pesanError.style.display = 'none';
                 loadCustomers(); 
             } else {
-                pesanError.innerText = 'Username salah bos!';
-                pesanError.style.display = 'block';
+                document.getElementById('pesan-error').style.display = 'block';
             }
         });
-
-        document.getElementById('btn-logout').addEventListener('click', function() {
-            window.location.reload(); 
-        });
-
-        // LOGIC NAVIGASI BAWAH
+        document.getElementById('btn-logout').addEventListener('click', function() { window.location.reload(); });
         document.querySelectorAll('.nav-item').forEach(function(button) {
             button.addEventListener('click', function(e) {
                 document.querySelectorAll('.nav-item').forEach(function(btn) { btn.classList.remove('active'); });
                 document.querySelectorAll('.view').forEach(function(view) { view.classList.remove('active'); });
-                
                 var targetBtn = button.closest('.nav-item');
                 targetBtn.classList.add('active');
-                
-                var targetViewId = targetBtn.dataset.target;
-                document.getElementById(targetViewId).classList.add('active');
-                
+                document.getElementById(targetBtn.dataset.target).classList.add('active');
                 document.getElementById('page-title').innerText = targetBtn.dataset.title;
             });
         });
+        document.getElementById('btn-add-customer').addEventListener('click', function() { document.getElementById('modal-customer').classList.add('active'); });
+        document.getElementById('close-modal').addEventListener('click', function() { document.getElementById('modal-customer').classList.remove('active'); });
 
-        // MODAL TAMBAH PELANGGAN
-        document.getElementById('btn-add-customer').addEventListener('click', function() {
-            document.getElementById('modal-customer').classList.add('active');
-        });
-        document.getElementById('close-modal').addEventListener('click', function() {
-            document.getElementById('modal-customer').classList.remove('active');
-        });
-
-        // SIMPAN PELANGGAN KE SUPABASE 
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
             var btnSave = document.getElementById('btn-save-cust');
-            btnSave.innerText = "Menyimpan...";
             btnSave.disabled = true;
-
-            var nama = document.getElementById('cust-name').value;
-            var hp = document.getElementById('cust-phone').value;
-            var pkt = document.getElementById('cust-package').value;
-            var hrg = document.getElementById('cust-price').value; // DATA HARGA PAKET
-            var user = document.getElementById('cust-user').value;
-            var pass = document.getElementById('cust-pass').value;
-            var due = document.getElementById('cust-due').value;
-
-            var randomCode = "NET-" + Math.floor(100000 + Math.random() * 900000);
-
             try {
                 var { error } = await db.from('customers').insert([{
-                    customer_code: randomCode,
-                    name: nama,
-                    phone: hp,
-                    package_name: pkt,
-                    package_price: parseInt(hrg), // KIRIM HARGA PAKET (WAJIB ISI)
-                    pppoe_username: user,
-                    pppoe_password: pass,
-                    due_date: parseInt(due),
+                    customer_code: "NET-" + Math.floor(100000 + Math.random() * 900000),
+                    name: document.getElementById('cust-name').value,
+                    phone: document.getElementById('cust-phone').value,
+                    package_name: document.getElementById('cust-package').value,
+                    package_price: parseInt(document.getElementById('cust-price').value),
+                    pppoe_username: document.getElementById('cust-user').value,
+                    pppoe_password: document.getElementById('cust-pass').value,
+                    due_date: parseInt(document.getElementById('cust-due').value),
                     isolation_status: false
                 }]);
-
                 if (error) throw error;
-
-                alert("Mantap bos! Pelanggan berhasil ditambahkan!");
+                alert("Pelanggan berhasil ditambahkan!");
                 document.getElementById('form-customer').reset();
                 document.getElementById('modal-customer').classList.remove('active');
                 loadCustomers();
-            } catch (err) {
-                alert("Gagal menyimpan: " + err.message);
-            } finally {
-                btnSave.innerText = "Simpan Pelanggan";
-                btnSave.disabled = false;
-            }
+            } catch (err) { alert("Gagal menyimpan: " + err.message); } 
+            finally { btnSave.disabled = false; }
         });
 
-        // FUNGSI MANUAL ISOLIR
-        async function setStatusIsolir(customerId, pppoeUser, makeIsolated) {
+        // FUNGSI ISOLIR / BUKA ISOLIR
+        async function setStatusIsolir(customerId, pppoeUser, makeIsolated, pkgName) {
             var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
-            var konfirmasi = confirm(`Yakin ingin mengubah status pelanggan ini menjadi ${actionText}?`);
-            if (!konfirmasi) return;
+            if (!confirm(`Yakin ingin mengubah status pelanggan ini menjadi ${actionText}?`)) return;
 
             try {
                 alert("Sedang menghubungi MikroTik bos... Mohon tunggu.");
-                
                 const response = await fetch('https://ufvwxdjpmetpvogtvnxj.supabase.co/functions/v1/mikrotik', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
                     body: JSON.stringify({
                         pppoe_username: pppoeUser,
-                        action: actionText 
+                        action: actionText,
+                        package_name: pkgName
                     })
                 });
-
                 const resultMikrotik = await response.json();
-                
-                if (resultMikrotik.error) {
-                    alert("Gagal konek ke MikroTik: " + resultMikrotik.error);
-                    return; 
-                }
+                if (resultMikrotik.error) return alert("Gagal konek ke MikroTik: " + resultMikrotik.error);
 
+                var { error } = await db.from('customers').update({ isolation_status: makeIsolated }).eq('id', customerId);
+                if (error) throw error;
+                
+                alert(`Berhasil! Pelanggan telah diubah menjadi ${actionText}.`);
+                loadCustomers();
+            } catch (err) { alert("Error: " + err.message); }
+        }
+
+        // FUNGSI BARU: HAPUS PELANGGAN DARI DATABASE
+        async function hapusPelanggan(customerId, namaPelanggan) {
+            var konfirmasi = confirm(`Yakin bos ingin MENGHAPUS pelanggan [ ${namaPelanggan} ] secara permanen dari aplikasi?`);
+            if (!konfirmasi) return;
+
+            try {
                 var { error } = await db.from('customers')
-                    .update({ isolation_status: makeIsolated })
+                    .delete()
                     .eq('id', customerId);
 
                 if (error) throw error;
 
-                alert(`Berhasil! Pelanggan telah diubah menjadi ${actionText}.`);
-                loadCustomers();
+                alert(`Data pelanggan ${namaPelanggan} berhasil dihapus!`);
+                loadCustomers(); // Refresh daftar setelah dihapus
             } catch (err) {
-                alert("Error: " + err.message);
+                alert("Gagal menghapus: " + err.message);
             }
         }
 
-        // LOAD DATA PELANGGAN
+        // LOAD DATA PELANGGAN (DENGAN TOMBOL HAPUS BARU)
         async function loadCustomers() {
             var list = document.getElementById('customer-list');
-            list.innerHTML = '<p style="text-align:center; color:gray; padding:20px;">Memuat data dari Supabase...</p>';
-
             try {
-                var { data: customers, error } = await db
-                    .from('customers')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
+                var { data: customers, error } = await db.from('customers').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
-
-                if (!customers || customers.length === 0) {
-                    list.innerHTML = '<div style="text-align:center; padding:20px; font-size:14px; color:gray;">Belum ada data pelanggan di database.</div>';
-                    document.getElementById('stat-total').innerText = 0;
-                    document.getElementById('stat-active').innerText = 0;
-                    document.getElementById('stat-isolated').innerText = 0;
-                    return;
-                }
+                if (!customers || customers.length === 0) return list.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">Belum ada data.</div>';
 
                 list.innerHTML = '';
-                var totalActive = 0;
-                var totalIsolated = 0;
+                var totalActive = 0, totalIsolated = 0;
 
                 customers.forEach(function(cust) {
                     var isIsolated = cust.isolation_status === true || cust.isolation_status === 'true';
+                    isIsolated ? totalIsolated++ : totalActive++;
                     var statusColor = isIsolated ? 'red' : 'green';
                     var statusTextDisplay = isIsolated ? 'ISOLATED' : 'NORMAL';
                     
-                    if(isIsolated) {
-                        totalIsolated++;
-                    } else {
-                        totalActive++;
-                    }
-
                     var actionButton = isIsolated 
-                        ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false)" class="btn-buka">BUKA ISOLIR</button>`
-                        : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true)" class="btn-isolir">ISOLIR</button>`;
+                        ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false, '${cust.package_name}')" class="btn-buka">BUKA ISOLIR</button>`
+                        : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true, '${cust.package_name}')" class="btn-isolir">ISOLIR</button>`;
+
+                    // TOMBOL HAPUS
+                    var deleteButton = `<button onclick="hapusPelanggan('${cust.id}', '${cust.name}')" class="btn-hapus">HAPUS</button>`;
 
                     list.innerHTML += `
                         <div class="customer-card">
                             <div>
                                 <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
-                                <small style="color: gray;">${cust.customer_code} | Paket: ${cust.package_name || '-'} (Rp${cust.package_price || '0'}) | PPPoE: ${cust.pppoe_username}</small><br>
+                                <small style="color: gray;">${cust.customer_code} | Paket: ${cust.package_name} | PPPoE: ${cust.pppoe_username}</small><br>
                                 <small style="color: ${statusColor}; font-weight: bold;">● ${statusTextDisplay}</small>
                             </div>
-                            <div>
+                            <div class="btn-group">
                                 ${actionButton}
+                                ${deleteButton}
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
-                
                 document.getElementById('stat-total').innerText = customers.length;
                 document.getElementById('stat-active').innerText = totalActive;
                 document.getElementById('stat-isolated').innerText = totalIsolated;
-
-            } catch (err) {
-                list.innerHTML = `<div style="color:red; font-size:12px; background:#fee2e2; padding:10px; border-radius:8px;"><b>Error Supabase:</b> ${err.message}</div>`;
-            }
+            } catch (err) { list.innerHTML = `<div style="color:red; font-size:12px;">Error: ${err.message}</div>`; }
         }
     </script>
 </body>
