@@ -64,7 +64,7 @@
         /* Modal Tambah Pelanggan */
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 20px;}
         .modal.active { display: flex; }
-        .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; position: relative; animation: slideUp 0.3s ease-out; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 20px; position: relative; animation: slideUp 0.3s ease-out; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .close-modal { cursor: pointer; font-size: 24px; font-weight: bold; color: var(--danger); line-height: 1;}
         .form-group { margin-bottom: 12px; }
@@ -157,6 +157,11 @@
                     <label>No. WhatsApp (Awali 62)</label>
                     <input type="number" id="cust-phone" placeholder="Contoh: 628123456789" required>
                 </div>
+                <!-- TAMBAHAN BARU: INPUT NAMA PAKET -->
+                <div class="form-group">
+                    <label>Nama Paket (Contoh: 10Mbps / 20Mbps)</label>
+                    <input type="text" id="cust-package" required>
+                </div>
                 <div class="form-group">
                     <label>Username PPPoE</label>
                     <input type="text" id="cust-user" required>
@@ -230,7 +235,7 @@
             document.getElementById('modal-customer').classList.remove('active');
         });
 
-        // SIMPAN PELANGGAN KE SUPABASE (SUDAH DI-FIX BOOLEAN & CUSTOMER CODE)
+        // SIMPAN PELANGGAN KE SUPABASE
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
             var btnSave = document.getElementById('btn-save-cust');
@@ -239,6 +244,7 @@
 
             var nama = document.getElementById('cust-name').value;
             var hp = document.getElementById('cust-phone').value;
+            var pkt = document.getElementById('cust-package').value; // AMBIL DATA PAKET
             var user = document.getElementById('cust-user').value;
             var pass = document.getElementById('cust-pass').value;
             var due = document.getElementById('cust-due').value;
@@ -251,10 +257,11 @@
                     customer_code: randomCode,
                     name: nama,
                     phone: hp,
+                    package_name: pkt, // KIRIM DATA PAKET KE DATABASE
                     pppoe_username: user,
                     pppoe_password: pass,
                     due_date: parseInt(due),
-                    isolation_status: false // FALSE artinya NORMAL (Sesuai tipe Boolean di DB)
+                    isolation_status: false
                 }]);
 
                 if (error) throw error;
@@ -271,9 +278,8 @@
             }
         });
 
-        // FUNGSI MANUAL ISOLIR (UPDATE STATUS DATABASE & MIKROTIK)
+        // FUNGSI MANUAL ISOLIR
         async function setStatusIsolir(customerId, pppoeUser, makeIsolated) {
-            // makeIsolated bernilai true (isolir) atau false (normal)
             var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
             var konfirmasi = confirm(`Yakin ingin mengubah status pelanggan ini menjadi ${actionText}?`);
             if (!konfirmasi) return;
@@ -281,7 +287,6 @@
             try {
                 alert("Sedang menghubungi MikroTik bos... Mohon tunggu.");
                 
-                // Tembak ke Supabase Edge Function
                 const response = await fetch('https://ufvwxdjpmetpvogtvnxj.supabase.co/functions/v1/mikrotik', {
                     method: 'POST',
                     headers: {
@@ -301,7 +306,6 @@
                     return; 
                 }
 
-                // Jika sukses di MikroTik, update Supabase pakai Boolean (true/false)
                 var { error } = await db.from('customers')
                     .update({ isolation_status: makeIsolated })
                     .eq('id', customerId);
@@ -309,8 +313,6 @@
                 if (error) throw error;
 
                 alert(`Mantap! Pelanggan berhasil diubah menjadi ${actionText}.`);
-                
-                // Refresh data
                 loadCustomers();
             } catch (err) {
                 alert("Error: " + err.message);
@@ -343,9 +345,7 @@
                 var totalIsolated = 0;
 
                 customers.forEach(function(cust) {
-                    // Karena di database berbentuk boolean, kita cek jika nilainya true
                     var isIsolated = cust.isolation_status === true || cust.isolation_status === 'true';
-                    
                     var statusColor = isIsolated ? 'red' : 'green';
                     var statusTextDisplay = isIsolated ? 'ISOLATED' : 'NORMAL';
                     
@@ -355,7 +355,6 @@
                         totalActive++;
                     }
 
-                    // Logika tombol: Jika isIsolated=true, munculkan tombol BUKA (false). Sebaliknya ISOLIR (true).
                     var actionButton = isIsolated 
                         ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false)" class="btn-buka">BUKA ISOLIR</button>`
                         : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true)" class="btn-isolir">ISOLIR</button>`;
@@ -364,7 +363,7 @@
                         <div class="customer-card">
                             <div>
                                 <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
-                                <small style="color: gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
+                                <small style="color: gray;">${cust.customer_code} | Paket: ${cust.package_name || '-'} | PPPoE: ${cust.pppoe_username}</small><br>
                                 <small style="color: ${statusColor}; font-weight: bold;">● ${statusTextDisplay}</small>
                             </div>
                             <div>
@@ -374,7 +373,6 @@
                     `;
                 });
                 
-                // Update Dashboard Stats
                 document.getElementById('stat-total').innerText = customers.length;
                 document.getElementById('stat-active').innerText = totalActive;
                 document.getElementById('stat-isolated').innerText = totalIsolated;
