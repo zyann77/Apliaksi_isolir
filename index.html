@@ -79,7 +79,6 @@
                     <input type="text" id="search-customer" class="search-bar" placeholder="Cari nama pelanggan...">
                 </div>
                 
-                <!-- FILTER BARU PELANGGAN -->
                 <div class="filter-scroll" id="cust-filter-scroll">
                     <div class="chip active" onclick="filterCustomer('semua', this)">Semua</div>
                     <div class="chip" onclick="filterCustomer('aktif', this)">Aktif</div>
@@ -141,11 +140,13 @@
 
     <!-- ================= CUSTOMER DETAIL (BOTTOM SHEET) ================= -->
     <div id="detail-sheet" class="bottom-sheet-overlay">
-        <div class="bottom-sheet">
-            <div class="sheet-header" style="flex-direction:column; gap:15px;">
+        <div class="bottom-sheet" id="swipeable-sheet">
+            <!-- GARIS PEGANGAN UNTUK SWIPE -->
+            <div class="drag-handle-bar"></div>
+
+            <div class="sheet-header" style="flex-direction:column; gap:15px; padding-top:10px;">
                 <div style="display:flex; justify-content:space-between; width:100%;">
                     <button class="btn-back" onclick="closeDetailScreen()">← Kembali</button>
-                    <!-- TOMBOL HAPUS & EDIT -->
                     <div style="display:flex; gap:5px;">
                         <button class="btn-sm" style="background:var(--danger-light); color:var(--danger);" onclick="hapusPelanggan()">🗑️ Hapus</button>
                         <button class="btn-sm" style="background:var(--navy); color:white;" onclick="openEditModal()">✏️ Edit</button>
@@ -239,7 +240,9 @@
                 <div class="input-group"><input type="text" id="cust-user" placeholder="Secret (User PPPoE)" required></div>
                 <div class="input-group"><input type="text" id="cust-pass" placeholder="Password PPPoE" required></div>
                 
-                <div class="section-title">03. BILLING</div>
+                <div class="section-title">03. BILLING & HARGA</div>
+                <!-- INI KOLOM HARGA MANUAL BOSKU -->
+                <div class="input-group"><input type="number" id="cust-price" placeholder="Harga Manual (Rp)" required></div>
                 <div class="input-group"><input type="number" id="cust-due" placeholder="Tgl Tagihan/Jatuh Tempo (1-31)" min="1" max="31" required></div>
                 
                 <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top:15px;">SIMPAN DATA</button>
@@ -275,6 +278,6 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=hapus_lunas_100"></script>
+    <script src="js/app.js?v=swipe_harga_1"></script>
 </body>
 </html>
