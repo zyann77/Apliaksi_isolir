@@ -1,4 +1,4 @@
-// INIT SUPABASE (NEW KREDENSIAL BOSKU)
+// INIT SUPABASE (KREDENSIAL TERBARU)
 const SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -74,9 +74,29 @@ async function initData() {
 
 const formatRp = (angka) => "Rp " + (Number(angka) || 0).toLocaleString('id-ID');
 
-// MENGAMBIL DAFTAR PAKET UNTUK DROPDOWN
+// MENGAMBIL DAFTAR PAKET UNTUK DROPDOWN + FITUR MAGIC AUTO-INJECT
 async function loadPackages() {
     let { data, error } = await db.from('packages').select('*').eq('status', 'ACTIVE');
+    
+    // 🚀 FITUR MAGIC: JIKA TABEL PAKET DI SUPABASE KOSONG, OTOMATIS BIKIN 5 PAKET INI
+    if (!data || data.length === 0) {
+        console.log("Menyuntikkan 5 Paket Default ke Supabase...");
+        const defaultPackages = [
+            { name: 'Paket 10 Mbps', speed: '10 Mbps', price: 150000, ppp_profile: 'profile1-10mbps', status: 'ACTIVE' },
+            { name: 'Paket 20 Mbps', speed: '20 Mbps', price: 200000, ppp_profile: 'profile2-20mbps', status: 'ACTIVE' },
+            { name: 'Paket 50 Mbps', speed: '50 Mbps', price: 300000, ppp_profile: 'profile3-50mbps', status: 'ACTIVE' },
+            { name: 'Paket 7 Mbps', speed: '7 Mbps', price: 100000, ppp_profile: 'profile4-7mbps', status: 'ACTIVE' },
+            { name: 'Profile 5', speed: 'Custom', price: 50000, ppp_profile: 'profile5', status: 'ACTIVE' }
+        ];
+        
+        // Memasukkan ke database Supabase
+        await db.from('packages').insert(defaultPackages);
+        
+        // Tarik datanya lagi setelah berhasil dibuat
+        let res = await db.from('packages').select('*').eq('status', 'ACTIVE');
+        data = res.data || [];
+    }
+
     if(error) console.error("Error Packages:", error);
     globalPackages = data || [];
     
@@ -84,14 +104,14 @@ async function loadPackages() {
     if(selectEl) {
         selectEl.innerHTML = '<option value="">-- Pilih Paket Internet --</option>';
         globalPackages.forEach(p => {
-            selectEl.innerHTML += `<option value="${p.id}">${p.name} - ${formatRp(p.price)}</option>`;
+            selectEl.innerHTML += `<option value="${p.id}">${p.ppp_profile} — ${formatRp(p.price)}</option>`;
         });
     }
 }
 
 // MENGAMBIL PELANGGAN DAN JOIN DENGAN TABEL PAKET
 async function loadCustomers() {
-    let { data, error } = await db.from('customers').select('*, packages(name, price)').order('created_at', { ascending: false });
+    let { data, error } = await db.from('customers').select('*, packages(ppp_profile, price)').order('created_at', { ascending: false });
     if(error) console.error("Error Customers:", error);
     globalCustomers = data || [];
     renderCustomerList(globalCustomers);
@@ -113,7 +133,7 @@ function renderCustomerList(data) {
         let avatar = safeName.charAt(0).toUpperCase();
         if(safeName.length > 1) avatar += safeName.charAt(1).toUpperCase();
         
-        let packName = cust.packages ? cust.packages.name : '-';
+        let packName = cust.packages ? cust.packages.ppp_profile : '-';
         let packPrice = cust.packages ? cust.packages.price : 0;
         
         list.innerHTML += `
@@ -203,7 +223,7 @@ function renderInvoiceList() {
 
         let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
         let invNo = "INV-" + new Date().getFullYear() + String(currMonth + 1).padStart(2,'0') + "-" + String(cust.customer_code).replace('CUST-','');
-        let packName = cust.packages?.name || '-';
+        let packName = cust.packages?.ppp_profile || '-';
         let packPrice = cust.packages?.price || 0;
 
         let waMsg = `Halo *${cust.name || 'Pelanggan'}*,\n\nTagihan internet *${packName}* Anda untuk periode *${curBulanStr}* telah terbit.\n\n💰 *Total: ${formatRp(packPrice)}*\n📅 Jatuh tempo: tgl *${cust.due_date || '-'}*\nNo. Invoice: *${invNo}*\n\nSilakan lakukan pembayaran sebelum tanggal jatuh tempo untuk menghindari pemutusan layanan.\n\nTerima kasih 🙏`;
@@ -233,7 +253,7 @@ function openDetail(id) {
     
     let isIso = activeCust.isolation_status === 'ISOLATED';
     let safeName = String(activeCust.name || 'User');
-    let packName = activeCust.packages?.name || '-';
+    let packName = activeCust.packages?.ppp_profile || '-';
     let packPrice = activeCust.packages?.price || 0;
     
     document.getElementById('det-name').innerText = safeName;
@@ -284,7 +304,7 @@ function kirimNotaWA() {
     window.open(`https://wa.me/${activeCust.phone || ''}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// FORM TAMBAH / EDIT KE SKEMA BARU
+// FORM TAMBAH / EDIT
 function bukaModalTambah() {
     document.getElementById('customer-form').reset();
     document.getElementById('form-id').value = "";
@@ -299,7 +319,7 @@ function openEditModal() {
     document.getElementById('cust-name').value = activeCust.name || "";
     document.getElementById('cust-phone').value = activeCust.phone || "";
     document.getElementById('cust-address').value = activeCust.address || "";
-    document.getElementById('cust-package-id').value = activeCust.package_id || ""; // Set Dropdown
+    document.getElementById('cust-package-id').value = activeCust.package_id || ""; 
     document.getElementById('cust-user').value = activeCust.pppoe_username || "";
     document.getElementById('cust-pass').value = activeCust.pppoe_password || "";
     document.getElementById('cust-due').value = activeCust.due_date || "";
@@ -312,12 +332,11 @@ document.getElementById('customer-form').addEventListener('submit', async (e) =>
     e.preventDefault();
     let id = document.getElementById('form-id').value;
     
-    // PAYLOAD MENYESUAIKAN SKEMA BARU BOSKU (Tidak ada kolom harga)
     let payload = {
         name: document.getElementById('cust-name').value,
         phone: document.getElementById('cust-phone').value,
         address: document.getElementById('cust-address').value,
-        package_id: document.getElementById('cust-package-id').value, // ID dari relasi
+        package_id: document.getElementById('cust-package-id').value, 
         pppoe_username: document.getElementById('cust-user').value,
         pppoe_password: document.getElementById('cust-pass').value,
         due_date: parseInt(document.getElementById('cust-due').value)
@@ -358,7 +377,7 @@ function bukaModalBayar() {
     if(!activeCust) return;
     closeDetailScreen();
     document.getElementById('pay-id').value = activeCust.id;
-    document.getElementById('pay-cust-name').innerText = activeCust.name + " — " + (activeCust.packages?.name || '');
+    document.getElementById('pay-cust-name').innerText = activeCust.name + " — " + (activeCust.packages?.ppp_profile || '');
     document.getElementById('pay-amount').value = activeCust.packages?.price || 0;
     openModal('modal-pay');
 }
@@ -370,7 +389,6 @@ document.getElementById('payment-form').addEventListener('submit', async (e) => 
     let method = document.getElementById('pay-method').value;
     let cust = globalCustomers.find(c => String(c.id) === String(id));
     
-    // FORMAT TANGGAL BILLING PERIOD YANG WAJIB DI SKEMA BARU
     let d = new Date();
     let billingPeriod = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
 
