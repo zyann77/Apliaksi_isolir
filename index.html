@@ -2,36 +2,69 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NET//CONTROL</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Load Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        /* CSS Dasar Langsung Digabung Agar Pasti Jalan */
-        :root { --bg-color: #f4f6f8; --card-bg: #ffffff; --text-main: #1e293b; --primary: #10b981; --border: #e2e8f0; }
+        /* CSS Variables & Reset */
+        :root { --bg-color: #f4f6f8; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --primary: #10b981; --primary-dark: #059669; --danger: #ef4444; --warning: #f59e0b; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg-color); color: var(--text-main); }
-        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; overflow: hidden; }
+        body { background: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
+
+        /* Screens */
+        .screen { display: none; height: 100vh; width: 100vw; overflow: hidden; flex-direction: column; }
         .screen.active { display: flex; }
-        .login-box { margin: auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
-        .login-box h1 { color: var(--text-main); }
-        .login-box h1 span { color: var(--primary); }
-        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; text-align: center; font-weight: bold; }
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .app-header { display: flex; justify-content: space-between; padding: 15px; background: white; border-bottom: 1px solid var(--border); }
-        .app-content { flex: 1; padding: 15px; overflow-y: auto; }
-        #btn-logout { background: #ef4444; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold;}
+
+        /* Login Box */
+        .login-box { margin: auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); width: 90%; max-width: 400px; text-align: center; }
+        .logo { font-weight: 800; font-size: 28px; }
+        .logo span { color: var(--primary); }
+        .subtitle { color: var(--text-muted); margin-bottom: 20px; font-size: 14px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; text-align: center; font-weight: bold;}
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .btn-primary:active { background: var(--primary-dark); transform: scale(0.98); }
+
+        /* App Header */
+        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--card-bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .app-header h2 { font-size: 18px; font-weight: 600; }
+        .btn-logout { background: var(--danger); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; }
+
+        /* Main Content */
+        .app-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* Dashboard Stats */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;}
+        .stat-card { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; }
+        .stat-card h3 { font-size: 24px; font-weight: 700; }
+        .stat-card.success h3 { color: var(--primary); }
+
+        /* Customers */
+        .action-bar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .action-bar input { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+        .customer-card { background: var(--card-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); }
+        .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 11px; font-weight: 500; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item .icon { font-size: 20px; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
-    <!-- HALAMAN LOGIN -->
+    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="screen active">
         <div class="login-box">
-            <h1>NET<span>//</span>CONTROL</h1>
-            <p style="color: gray; margin-bottom: 20px; font-size: 14px;">Admin Management System</p>
-            
+            <h1 class="logo">NET<span>//</span>CONTROL</h1>
+            <p class="subtitle">Admin Management System</p>
             <form id="login-form">
-                <!-- HANYA INPUT USERNAME -->
                 <input type="text" id="username" placeholder="Masukkan Username" required autocomplete="off">
                 <button type="submit" id="btn-login" class="btn-primary">MASUK</button>
             </form>
@@ -39,54 +72,151 @@
         </div>
     </div>
 
-    <!-- HALAMAN DASHBOARD -->
+    <!-- APP SCREEN -->
     <div id="app-screen" class="screen">
         <header class="app-header">
-            <h2>Dashboard</h2>
-            <div id="btn-logout">LOGOUT</div>
+            <h2 id="page-title">Dashboard</h2>
+            <button class="btn-logout" id="btn-logout">OUT</button>
         </header>
+
         <main class="app-content">
-            <div style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #ddd; text-align: center;">
-                <h3 style="color: #10b981;">LOGIN BERHASIL!</h3>
-                <p>Selamat datang di NET//CONTROL bos.</p>
-                <p style="margin-top: 10px; font-size: 14px; color: gray;">Login sebagai: <span id="user-name-text" style="font-weight: bold; color: black;"></span></p>
-            </div>
+            
+            <!-- VIEW: DASHBOARD -->
+            <section id="view-dashboard" class="view active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-label">TOTAL PELANGGAN</span>
+                        <h3 id="stat-total">0</h3>
+                    </div>
+                    <div class="stat-card success">
+                        <span class="stat-label">AKTIF</span>
+                        <h3 id="stat-active">0</h3>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: PELANGGAN -->
+            <section id="view-customers" class="view">
+                <div class="action-bar">
+                    <input type="text" id="search-customer" placeholder="Cari pelanggan...">
+                    <button class="btn-primary" style="width: auto; padding: 10px 15px;">+ Tambah</button>
+                </div>
+                <div id="customer-list">
+                    <!-- Data pelanggan akan muncul di sini -->
+                </div>
+            </section>
+
         </main>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="view-dashboard" data-title="Dashboard">
+                <span class="icon">📊</span>
+                <span class="label">Dashboard</span>
+            </button>
+            <button class="nav-item" data-target="view-customers" data-title="Pelanggan">
+                <span class="icon">👥</span>
+                <span class="label">Pelanggan</span>
+            </button>
+        </nav>
     </div>
 
-    <!-- SCRIPT LOGIC MANUAL -->
     <script>
-        // ==========================================
-        // SETTING USERNAME ANDA DI SINI BOS
-        // ==========================================
+        // 1. SUPABASE INIT (Gunakan Key Anda)
+        const SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 2. LOGIC LOGIN MANUAL
         const USERNAME_VALID = "admin123"; 
-
-        const formLogin = document.getElementById('login-form');
-        const pesanError = document.getElementById('pesan-error');
-
-        formLogin.addEventListener('submit', function(e) {
-            e.preventDefault(); // Cegah refresh halaman (agar tidak muncul tanda ?)
-            
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
             const inputUsername = document.getElementById('username').value;
+            const pesanError = document.getElementById('pesan-error');
             
-            // Cek apakah username sama dengan settingan di atas
             if (inputUsername === USERNAME_VALID) {
-                // Berhasil masuk
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('app-screen').classList.add('active');
-                document.getElementById('user-name-text').innerText = inputUsername;
                 pesanError.style.display = 'none';
+                
+                // Jalankan fungsi ambil data setelah berhasil login
+                loadCustomers(); 
             } else {
-                // Gagal masuk
                 pesanError.innerText = 'Username salah bos!';
                 pesanError.style.display = 'block';
             }
         });
 
-        // Proses Logout (Kembali ke awal)
         document.getElementById('btn-logout').addEventListener('click', function() {
             window.location.reload(); 
         });
+
+        // 3. LOGIC NAVIGASI BAWAH
+        document.querySelectorAll('.nav-item').forEach(button => {
+            button.addEventListener('click', (e) => {
+                // Hapus semua class active
+                document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+                
+                // Tambahkan class active ke tombol yang diklik
+                const targetBtn = button.closest('.nav-item');
+                targetBtn.classList.add('active');
+                
+                // Tampilkan view yang sesuai
+                const targetViewId = targetBtn.dataset.target;
+                document.getElementById(targetViewId).classList.add('active');
+                
+                // Ubah judul header
+                document.getElementById('page-title').innerText = targetBtn.dataset.title;
+            });
+        });
+
+        // 4. LOAD DATA PELANGGAN DARI SUPABASE
+        async function loadCustomers() {
+            const list = document.getElementById('customer-list');
+            list.innerHTML = '<p style="text-align:center; color:gray; padding:20px;">Memuat data dari Supabase...</p>';
+
+            // Ambil data pelanggan
+            const { data: customers, error } = await supabase
+                .from('customers')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                list.innerHTML = `<div style="color:red; font-size:12px; background:#fee2e2; padding:10px; border-radius:8px;"><b>Error Supabase:</b> ${error.message} <br><br><i>(Baca panduan di bawah untuk mengatasi ini)</i></div>`;
+                return;
+            }
+
+            if (!customers || customers.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:20px; font-size:14px; color:gray;">Belum ada data pelanggan di database.</div>';
+                document.getElementById('stat-total').innerText = 0;
+                document.getElementById('stat-active').innerText = 0;
+                return;
+            }
+
+            // Render list pelanggan jika ada datanya
+            list.innerHTML = '';
+            let totalActive = 0;
+
+            customers.forEach(cust => {
+                if(cust.connection_status === 'ACTIVE') totalActive++;
+                
+                let statusColor = cust.isolation_status === 'ISOLATED' ? 'red' : 'green';
+                list.innerHTML += `
+                    <div class="customer-card">
+                        <div>
+                            <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
+                            <small style="color: gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
+                            <small style="color: ${statusColor}; font-weight: bold;">● ${cust.isolation_status}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Update Dashboard Stats
+            document.getElementById('stat-total').innerText = customers.length;
+            document.getElementById('stat-active').innerText = totalActive;
+        }
     </script>
 </body>
 </html>
