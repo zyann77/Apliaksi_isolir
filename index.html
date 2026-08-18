@@ -222,7 +222,7 @@
             document.getElementById('modal-customer').classList.remove('active');
         });
 
-        // LOGIC SIMPAN PELANGGAN KE SUPABASE
+        // SIMPAN PELANGGAN KE SUPABASE
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
             var btnSave = document.getElementById('btn-save-cust');
@@ -235,34 +235,34 @@
             var pass = document.getElementById('cust-pass').value;
             var due = document.getElementById('cust-due').value;
 
+            // Generate Kode Pelanggan Otomatis (Contoh: NET-123456)
+            var randomCode = "NET-" + Math.floor(100000 + Math.random() * 900000);
+
             try {
-                // Insert ke tabel customers
                 var { error } = await db.from('customers').insert([{
+                    customer_code: randomCode, // <-- Ini tambahan wajibnya bos
                     name: nama,
                     phone: hp,
                     pppoe_username: user,
                     pppoe_password: pass,
-                    due_date: parseInt(due)
+                    due_date: parseInt(due),
+                    isolation_status: 'NORMAL' // Status awal
                 }]);
 
                 if (error) throw error;
 
-                alert("Mantap! Pelanggan berhasil ditambahkan.");
-                
-                // Reset form dan tutup modal
+                alert("Pelanggan berhasil ditambahkan!");
                 document.getElementById('form-customer').reset();
                 document.getElementById('modal-customer').classList.remove('active');
-                
-                // Refresh daftar pelanggan
                 loadCustomers();
             } catch (err) {
-                alert("Gagal menyimpan: " + err.message + "\n(Pastikan Username PPPoE belum pernah dipakai pelanggan lain)");
+                alert("Gagal menyimpan: " + err.message);
             } finally {
                 btnSave.innerText = "Simpan Pelanggan";
                 btnSave.disabled = false;
             }
         });
-
+        
         // LOAD DATA PELANGGAN DARI SUPABASE
         async function loadCustomers() {
             var list = document.getElementById('customer-list');
