@@ -3,79 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Auto Isolir ISP</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Font SF Pro / Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Icon Premium -->
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <!-- Supabase SDK -->
+    <title>NET//ISOLATOR</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div id="app">
-        <!-- Header Glassmorphism -->
-        <header class="glass-header">
-            <div class="greeting">
-                <p id="tanggal-hari-ini">Memuat tanggal...</p>
-                <h2>Halo, Admin 👋</h2>
+    <!-- Scanline Overlay -->
+    <div class="scanline"></div>
+
+    <!-- Splash Screen -->
+    <div id="splash" class="view active">
+        <div class="terminal-text" id="splash-terminal"></div>
+        <div class="brand-center hidden" id="splash-brand">
+            <h1 class="neon-title">NET//ISOLATOR</h1>
+            <p class="subtitle">MIKROTIK CUSTOMER CONTROL</p>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-view" class="view hidden">
+        <div class="login-box cyber-card">
+            <h2 class="neon-title">SECURE ACCESS</h2>
+            <div class="input-group">
+                <label>USERNAME</label>
+                <div class="input-wrapper">
+                    <span>></span>
+                    <input type="text" id="login-user" placeholder="__________________">
+                </div>
             </div>
-            <div class="status-koneksi">
-                <span class="dot pulse-green"></span> Online
+            <div class="input-group">
+                <label>PASSWORD</label>
+                <div class="input-wrapper">
+                    <span>></span>
+                    <input type="password" id="login-pass" placeholder="__________________">
+                </div>
+            </div>
+            <button class="cyber-btn" onclick="app.login()">[ ACCESS SYSTEM ]</button>
+            <div id="login-status" class="terminal-font mt-4">SYSTEM: WAITING FOR AUTHENTICATION...</div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="view hidden">
+        <header class="app-header">
+            <div class="brand">
+                <h1>NET//ISOLATOR</h1>
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span> SYSTEM ONLINE
+                </div>
             </div>
         </header>
 
-        <!-- Main Content (Dashboard) -->
-        <main class="content-area">
-            <div class="stats-grid">
-                <div class="stat-card glass-card">
-                    <ion-icon name="people" class="icon-blue"></ion-icon>
-                    <h3 id="total-pelanggan">0</h3>
-                    <p>Total Pelanggan</p>
+        <main class="app-content">
+            <!-- Dashboard View -->
+            <section id="dashboard" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card cyber-card">
+                        <div class="stat-label">TOTAL CLIENT</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card cyber-card">
+                        <div class="stat-label text-neon">ACTIVE</div>
+                        <div class="stat-value text-neon" id="stat-active">0</div>
+                    </div>
+                    <div class="stat-card cyber-card">
+                        <div class="stat-label text-warning">WARNING</div>
+                        <div class="stat-value text-warning" id="stat-warning">0</div>
+                    </div>
+                    <div class="stat-card cyber-card">
+                        <div class="stat-label text-danger">ISOLATED</div>
+                        <div class="stat-value text-danger" id="stat-isolated">0</div>
+                    </div>
                 </div>
-                <div class="stat-card glass-card">
-                    <ion-icon name="warning" class="icon-orange"></ion-icon>
-                    <h3 id="total-terlambat">0</h3>
-                    <p>Telat Bayar</p>
+
+                <div class="terminal-monitor cyber-card mt-4">
+                    <div class="terminal-header">SYSTEM LOG</div>
+                    <div class="terminal-body" id="system-log">
+                        <!-- Logs injected via JS -->
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="section-title">
-                <h3>Daftar Pelanggan</h3>
-            </div>
-            
-            <div class="search-bar glass-card">
-                <ion-icon name="search"></ion-icon>
-                <input type="text" id="search-input" placeholder="Cari username PPPoE...">
-            </div>
-
-            <!-- List Pelanggan -->
-            <div id="customer-list" class="customer-list">
-                <!-- Data akan dimunculkan oleh JavaScript -->
-            </div>
+            <!-- Other views (Clients, Payments, etc.) will be toggled here -->
+            <section id="clients" class="page hidden">
+                <div class="search-bar cyber-card">
+                    <span>> SEARCH CLIENT...</span>
+                    <input type="text" placeholder="Name, ID, PPPoE...">
+                </div>
+                <!-- Client list injected here -->
+            </section>
         </main>
 
-        <!-- Bottom Navigation ala iOS -->
-        <nav class="bottom-nav glass-nav">
-            <a href="#" class="nav-item active">
-                <ion-icon name="home"></ion-icon>
-                <span>Beranda</span>
-            </a>
-            <a href="#" class="nav-item">
-                <ion-icon name="people"></ion-icon>
-                <span>Pelanggan</span>
-            </a>
-            <a href="#" class="nav-item">
-                <ion-icon name="wallet"></ion-icon>
-                <span>Tagihan</span>
-            </a>
-            <a href="#" class="nav-item">
-                <ion-icon name="settings"></ion-icon>
-                <span>Sistem</span>
-            </a>
+        <footer class="app-footer">
+            <p>Created by Iyann</p>
+        </footer>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="app.navigate('dashboard')">⌂ HOME</button>
+            <button class="nav-item" onclick="app.navigate('clients')">◉ CLIENT</button>
+            <button class="nav-item" onclick="app.navigate('payments')">₿ PAYMENT</button>
+            <button class="nav-item text-neon" onclick="app.navigate('isolation')">⚡ ISOLATION</button>
+            <button class="nav-item" onclick="app.navigate('system')">⚙ SYSTEM</button>
         </nav>
     </div>
 
-    <script src="app.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
