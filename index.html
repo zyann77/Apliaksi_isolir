@@ -78,12 +78,16 @@
                     <span class="search-icon">🔍</span>
                     <input type="text" id="search-customer" class="search-bar" placeholder="Cari nama pelanggan...">
                 </div>
-                <div class="filter-scroll">
-                    <div class="chip active">Semua</div>
-                    <div class="chip">Aktif</div>
-                    <div class="chip">Belum Bayar</div>
-                    <div class="chip">Isolir</div>
+                
+                <!-- FILTER BARU PELANGGAN -->
+                <div class="filter-scroll" id="cust-filter-scroll">
+                    <div class="chip active" onclick="filterCustomer('semua', this)">Semua</div>
+                    <div class="chip" onclick="filterCustomer('aktif', this)">Aktif</div>
+                    <div class="chip" onclick="filterCustomer('lunas', this)" style="background:var(--cyan-light); color:var(--success);">Lunas</div>
+                    <div class="chip" onclick="filterCustomer('belum-bayar', this)" style="background:var(--danger-light); color:var(--danger);">Belum Bayar</div>
+                    <div class="chip" onclick="filterCustomer('isolir', this)">Isolir</div>
                 </div>
+                
                 <div id="customer-list"></div>
             </div>
 
@@ -141,7 +145,11 @@
             <div class="sheet-header" style="flex-direction:column; gap:15px;">
                 <div style="display:flex; justify-content:space-between; width:100%;">
                     <button class="btn-back" onclick="closeDetailScreen()">← Kembali</button>
-                    <button class="btn-sm" style="background:var(--navy); color:white;" onclick="openEditModal()">✏️ Edit Data</button>
+                    <!-- TOMBOL HAPUS & EDIT -->
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-sm" style="background:var(--danger-light); color:var(--danger);" onclick="hapusPelanggan()">🗑️ Hapus</button>
+                        <button class="btn-sm" style="background:var(--navy); color:white;" onclick="openEditModal()">✏️ Edit</button>
+                    </div>
                 </div>
                 <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
                     <div>
@@ -239,7 +247,7 @@
         </div>
     </div>
 
-    <!-- Payment Confirmation (TIDAK LAGI PAKAI FORM BIAR GAK MENTAL) -->
+    <!-- Payment Confirmation -->
     <div id="modal-pay" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; margin-bottom:20px;">
@@ -267,7 +275,6 @@
         </div>
     </div>
 
-    <!-- PERHATIKAN INI BOS! Ini yang membuat Cache terhapus paksa -->
-    <script src="js/app.js?v=sempurna_100"></script>
+    <script src="js/app.js?v=hapus_lunas_100"></script>
 </body>
 </html>
