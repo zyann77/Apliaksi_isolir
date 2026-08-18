@@ -1,29 +1,13 @@
 // ==========================================
-// 1. INISIALISASI SUPABASE (KONEKSI DATABASE)
+// 1. KONEKSI DATABASE SUPABASE
 // ==========================================
 const SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Pengecekan koneksi saat aplikasi dimulai
-async function checkSystemConnection() {
-    console.log("> INITIATING DATABASE PING...");
-    try {
-        const { error } = await supabase.from('customers').select('id').limit(1);
-        if (error) {
-            console.error("> [WARNING] DATABASE CONNECTION FAILED:", error.message);
-        } else {
-            console.log("> [OK] DATABASE SECURELY CONNECTED.");
-        }
-    } catch (err) {
-        console.error("> [FATAL ERROR] SYSTEM UNREACHABLE.");
-    }
-}
-checkSystemConnection();
-
 // ==========================================
-// 2. CORE LOGIC APLIKASI (UI & NAVIGASI)
+// 2. ENGINE UI & NAVIGASI (APP)
 // ==========================================
 const app = {
     init() {
@@ -34,14 +18,13 @@ const app = {
         const terminal = document.getElementById('splash-terminal');
         const lines = [
             "> INITIALIZING SYSTEM...",
-            "> CONNECTING DATABASE...",
-            "> LOADING MIKROTIK CONTROL...",
-            "> SECURITY CHECK...",
-            "> SYSTEM READY"
+            "> CONNECTING TO SUPABASE...",
+            "> LOADING SECURITY PROTOCOLS...",
+            "> SYSTEM READY."
         ];
         
         let i = 0;
-        if (!terminal) return; // Mencegah error jika elemen tidak ada
+        if (!terminal) return;
         
         const interval = setInterval(() => {
             if (i < lines.length) {
@@ -51,18 +34,16 @@ const app = {
                 clearInterval(interval);
                 setTimeout(() => {
                     terminal.classList.add('hidden');
-                    const splashBrand = document.getElementById('splash-brand');
-                    if(splashBrand) splashBrand.classList.remove('hidden');
+                    document.getElementById('splash-brand').classList.remove('hidden');
                     
-                    // Transisi ke Login
                     setTimeout(() => {
                         document.getElementById('splash').classList.remove('active');
                         document.getElementById('splash').classList.add('hidden');
                         document.getElementById('login-view').classList.remove('hidden');
                     }, 1500);
-                }, 500);
+                }, 800);
             }
-        }, 300);
+        }, 400);
     },
 
     login() {
@@ -72,66 +53,96 @@ const app = {
         setTimeout(() => {
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
-            this.startTerminalLog();
-            this.animateCounters();
         }, 1000);
     },
 
     navigate(viewId) {
-        document.querySelectorAll('.page').forEach(page => page.classList.remove('active', 'hidden'));
         document.querySelectorAll('.page').forEach(page => {
-            if (page.id !== viewId) page.classList.add('hidden');
+            page.classList.remove('active');
+            page.classList.add('hidden');
         });
         
-        document.getElementById(viewId).classList.remove('hidden');
-        document.getElementById(viewId).classList.add('active');
+        const targetView = document.getElementById(viewId);
+        if(targetView) {
+            targetView.classList.remove('hidden');
+            targetView.classList.add('active');
+        }
 
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-        if(event && event.currentTarget) event.currentTarget.classList.add('active');
-    },
-
-    startTerminalLog() {
-        const logBox = document.getElementById('system-log');
-        if(!logBox) return;
-        
-        const logs = [
-            "DATABASE CONNECTED",
-            "MIKROTIK READY",
-            "ISOLATION ENGINE ACTIVE"
-        ];
-        
-        let index = 0;
-        setInterval(() => {
-            if (index < logs.length) {
-                const time = new Date().toLocaleTimeString('id-ID');
-                const logEntry = document.createElement('div');
-                logEntry.innerText = `[${time}] > ${logs[index]}`;
-                logBox.appendChild(logEntry);
-                logBox.scrollTop = logBox.scrollHeight;
-                index++;
-            }
-        }, 1000);
-    },
-
-    animateCounters() {
-        this.countUp('stat-total', 0);
-    },
-
-    countUp(elementId, target) {
-        let current = 0;
-        const el = document.getElementById(elementId);
-        if(!el) return;
-        
-        const inc = target === 0 ? 0 : Math.ceil(target / 20);
-        const timer = setInterval(() => {
-            current += inc;
-            if (current >= target) {
-                current = target;
-                clearInterval(timer);
-            }
-            el.innerText = current;
-        }, 50);
+        if(event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        }
     }
 };
 
-window.onload = () => app.init();
+// ==========================================
+// 3. LOGIKA PELANGGAN (CUSTOMERS)
+// ==========================================
+const customers = {
+    togglePassword() {
+        const passInput = document.getElementById('input-password');
+        if (passInput.type === "password") passInput.type = "text";
+        else passInput.type = "password";
+    },
+
+    async save(event) {
+        event.preventDefault();
+
+        const btnSave = document.getElementById('btn-save-client');
+        const statusLog = document.getElementById('save-status-log');
+        
+        const nama = document.getElementById('input-nama').value;
+        const secret = document.getElementById('input-secret').value;
+        const password = document.getElementById('input-password').value;
+        const tglRegistrasi = document.getElementById('input-reg-date').value;
+        const tglIsolir = parseInt(document.getElementById('input-iso-date').value);
+
+        btnSave.innerText = "[ PROCESSING... ]";
+        btnSave.disabled = true;
+        statusLog.classList.remove('hidden', 'text-danger');
+        statusLog.classList.add('text-neon');
+        statusLog.innerHTML = `> INITIATING DATABASE INJECTION...<br>`;
+
+        try {
+            const { data, error } = await supabase.from('customers').insert([
+                {
+                    name: nama,
+                    pppoe_username: secret,
+                    pppoe_password: password,
+                    installation_date: tglRegistrasi,
+                    due_date: tglIsolir,
+                    payment_status: 'PAID',
+                    connection_status: 'ACTIVE',
+                    isolation_status: false
+                }
+            ]);
+
+            if (error) throw error;
+
+            statusLog.innerHTML += `> SECURE INJECTION SUCCESS.<br>> CLIENT [${secret}] REGISTERED.`;
+            
+            setTimeout(() => {
+                document.getElementById('form-add-client').reset();
+                btnSave.innerText = "[ EXECUTE: SAVE_CLIENT ]";
+                btnSave.disabled = false;
+                statusLog.classList.add('hidden');
+                app.navigate('dashboard'); 
+            }, 2000);
+
+        } catch (error) {
+            statusLog.classList.remove('text-neon');
+            statusLog.classList.add('text-danger');
+            statusLog.innerHTML += `> ERROR: ${error.message}`;
+            
+            btnSave.innerText = "[ RETRY ]";
+            btnSave.disabled = false;
+        }
+    }
+};
+
+// ==========================================
+// JALANKAN MESIN SAAT WEB DIBUKA
+// ==========================================
+window.onload = () => {
+    app.init();
+};
