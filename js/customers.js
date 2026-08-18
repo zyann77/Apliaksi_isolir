@@ -1,78 +1,43 @@
-const customers = {
-    // Menampilkan/Menyembunyikan Password PPPoE
-    togglePassword() {
-        const passInput = document.getElementById('input-password');
-        if (passInput.type === "password") {
-            passInput.type = "text";
-        } else {
-            passInput.type = "password";
-        }
-    },
+// Fetch & Render Customers
+async function loadCustomers() {
+    const { data: customers, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    // Menjalankan proses simpan data
-    async save(event) {
-        event.preventDefault(); // Mencegah form me-refresh halaman
-
-        const btnSave = document.getElementById('btn-save-client');
-        const statusLog = document.getElementById('save-status-log');
-        
-        // Ambil nilai dari form
-        const nama = document.getElementById('input-nama').value;
-        const secret = document.getElementById('input-secret').value;
-        const password = document.getElementById('input-password').value;
-        const tglRegistrasi = document.getElementById('input-reg-date').value;
-        const tglIsolir = parseInt(document.getElementById('input-iso-date').value);
-
-        // UI Feedback: Proses dimulai
-        btnSave.innerText = "[ PROCESSING... ]";
-        btnSave.disabled = true;
-        statusLog.classList.remove('hidden');
-        statusLog.innerHTML = `> INITIATING DATABASE INJECTION...<br>`;
-
-        try {
-            // Asumsi: Variabel 'supabase' sudah diinisialisasi di app.js
-            // Menyimpan data ke tabel 'customers' di Supabase
-            const { data, error } = await supabase
-                .from('customers')
-                .insert([
-                    {
-                        name: nama,
-                        pppoe_username: secret,
-                        pppoe_password: password,
-                        installation_date: tglRegistrasi,
-                        due_date: tglIsolir,
-                        payment_status: 'PAID', // Default aktif saat registrasi awal
-                        connection_status: 'ACTIVE',
-                        isolation_status: false
-                    }
-                ]);
-
-            if (error) throw error;
-
-            // Jika sukses
-            statusLog.classList.add('text-neon');
-            statusLog.classList.remove('text-danger');
-            statusLog.innerHTML += `> SECURE INJECTION SUCCESS.<br>> CLIENT [${secret}] REGISTERED.`;
-            
-            // Reset Form setelah 2 detik
-            setTimeout(() => {
-                document.getElementById('form-add-client').reset();
-                btnSave.innerText = "[ EXECUTE: SAVE_CLIENT ]";
-                btnSave.disabled = false;
-                statusLog.classList.add('hidden');
-                
-                // Kembali ke halaman daftar klien
-                app.navigate('clients'); 
-            }, 2000);
-
-        } catch (error) {
-            // Jika gagal (Misal: Secret/Username PPPoE sudah dipakai)
-            statusLog.classList.remove('text-neon');
-            statusLog.classList.add('text-danger');
-            statusLog.innerHTML += `> ERROR: ${error.message}`;
-            
-            btnSave.innerText = "[ RETRY ]";
-            btnSave.disabled = false;
-        }
+    if (error) {
+        console.error(error);
+        return;
     }
-};
+
+    const list = document.getElementById('customer-list');
+    list.innerHTML = '';
+    
+    customers.forEach(cust => {
+        let statusColor = cust.isolation_status === 'ISOLATED' ? 'red' : 'green';
+        list.innerHTML += `
+            <div class="customer-card">
+                <div>
+                    <h4 style="margin-bottom: 4px;">${cust.name}</h4>
+                    <small style="color: gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
+                    <small style="color: ${statusColor}; font-weight: bold;">● ${cust.isolation_status}</small>
+                </div>
+                <div style="display: flex; gap: 5px; flex-direction: column;">
+                    <button onclick="payCustomer('${cust.id}')" class="btn-primary" style="padding: 6px; font-size: 11px;">Bayar</button>
+                    <button onclick="whatsapp('${cust.phone}', '${cust.name}')" style="background: #25D366; color: white; border: none; padding: 6px; border-radius: 6px; font-size: 11px;">WA</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function whatsapp(phone, name) {
+    let cleanPhone = phone.startsWith('0') ? '62' + phone.slice(1) : phone;
+    let text = `Halo ${name},%0ATagihan WiFi Anda belum dibayarkan. Silakan melakukan pembayaran agar layanan tetap aktif.`;
+    window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+}
+
+// Load on start
+if (document.getElementById('customer-list')) {
+    loadCustomers();
+}
