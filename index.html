@@ -127,7 +127,6 @@
     </div>
 
     <script>
-        // KREDENSIAL BARU BOS
         var SUPABASE_URL = 'https://vljvulbjxhuysesronog.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsanZ1bGJqeGh1eXNlc3Jvbm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMjgyOTcsImV4cCI6MjEwMjYwNDI5N30.yPq1kySc9iPuOdS_eCWGRc60gUoklNqc2YRLQ7ILCIk';
         if (typeof window.supabaseClient === 'undefined') { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
@@ -157,21 +156,21 @@
         document.getElementById('btn-add-customer').addEventListener('click', function() { document.getElementById('modal-customer').classList.add('active'); });
         document.getElementById('close-modal').addEventListener('click', function() { document.getElementById('modal-customer').classList.remove('active'); });
 
+        // FUNGSI SIMPAN DISESUAIKAN DENGAN SQL BARU BOS
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
             var btnSave = document.getElementById('btn-save-cust');
             btnSave.disabled = true;
             try {
                 var { error } = await db.from('customers').insert([{
-                    customer_code: "NET-" + Math.floor(100000 + Math.random() * 900000),
+                    // customer_code dihapus (otomatis CUST-000001 dari SQL Supabase)
                     name: document.getElementById('cust-name').value,
                     phone: document.getElementById('cust-phone').value,
-                    package_name: document.getElementById('cust-package').value,
-                    package_price: parseInt(document.getElementById('cust-price').value),
+                    // Harga & Paket dilewati dulu karena sistemnya sekarang pakai ID tabel packages
                     pppoe_username: document.getElementById('cust-user').value,
                     pppoe_password: document.getElementById('cust-pass').value,
                     due_date: parseInt(document.getElementById('cust-due').value),
-                    isolation_status: false
+                    isolation_status: 'NORMAL' // SQL bos minta format Text, bukan False
                 }]);
                 if (error) throw error;
                 alert("Pelanggan berhasil ditambahkan!");
@@ -182,27 +181,24 @@
             finally { btnSave.disabled = false; }
         });
 
-        // FUNGSI ISOLIR / BUKA ISOLIR
-        async function setStatusIsolir(customerId, pppoeUser, makeIsolated, pkgName) {
+        // FUNGSI ISOLIR DISESUAIKAN DENGAN SQL BARU BOS
+        async function setStatusIsolir(customerId, pppoeUser, makeIsolated) {
             var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
             if (!confirm(`Yakin ingin mengubah status pelanggan ini menjadi ${actionText}?`)) return;
 
             try {
                 alert("Sedang menghubungi MikroTik bos... Mohon tunggu.");
-                // Fetch otomatis mengikuti URL Supabase yang baru
+                
                 const response = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-                    body: JSON.stringify({
-                        pppoe_username: pppoeUser,
-                        action: actionText,
-                        package_name: pkgName
-                    })
+                    body: JSON.stringify({ pppoe_username: pppoeUser, action: actionText })
                 });
                 const resultMikrotik = await response.json();
                 if (resultMikrotik.error) return alert("Gagal konek ke MikroTik: " + resultMikrotik.error);
 
-                var { error } = await db.from('customers').update({ isolation_status: makeIsolated }).eq('id', customerId);
+                // Update database pakai TEXT ('ISOLATED' / 'NORMAL')
+                var { error } = await db.from('customers').update({ isolation_status: actionText }).eq('id', customerId);
                 if (error) throw error;
                 
                 alert(`Berhasil! Pelanggan telah diubah menjadi ${actionText}.`);
@@ -210,26 +206,18 @@
             } catch (err) { alert("Error: " + err.message); }
         }
 
-        // FUNGSI BARU: HAPUS PELANGGAN DARI DATABASE
         async function hapusPelanggan(customerId, namaPelanggan) {
             var konfirmasi = confirm(`Yakin bos ingin MENGHAPUS pelanggan [ ${namaPelanggan} ] secara permanen dari aplikasi?`);
             if (!konfirmasi) return;
-
             try {
-                var { error } = await db.from('customers')
-                    .delete()
-                    .eq('id', customerId);
-
+                var { error } = await db.from('customers').delete().eq('id', customerId);
                 if (error) throw error;
-
                 alert(`Data pelanggan ${namaPelanggan} berhasil dihapus!`);
-                loadCustomers(); // Refresh daftar setelah dihapus
-            } catch (err) {
-                alert("Gagal menghapus: " + err.message);
-            }
+                loadCustomers(); 
+            } catch (err) { alert("Gagal menghapus: " + err.message); }
         }
 
-        // LOAD DATA PELANGGAN (DENGAN TOMBOL HAPUS BARU)
+        // FUNGSI LOAD DATA DISESUAIKAN DENGAN SQL BARU
         async function loadCustomers() {
             var list = document.getElementById('customer-list');
             try {
@@ -241,23 +229,23 @@
                 var totalActive = 0, totalIsolated = 0;
 
                 customers.forEach(function(cust) {
-                    var isIsolated = cust.isolation_status === true || cust.isolation_status === 'true';
+                    // Deteksi dari text 'ISOLATED'
+                    var isIsolated = cust.isolation_status === 'ISOLATED';
                     isIsolated ? totalIsolated++ : totalActive++;
                     var statusColor = isIsolated ? 'red' : 'green';
                     var statusTextDisplay = isIsolated ? 'ISOLATED' : 'NORMAL';
                     
                     var actionButton = isIsolated 
-                        ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false, '${cust.package_name}')" class="btn-buka">BUKA ISOLIR</button>`
-                        : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true, '${cust.package_name}')" class="btn-isolir">ISOLIR</button>`;
+                        ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false)" class="btn-buka">BUKA ISOLIR</button>`
+                        : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true)" class="btn-isolir">ISOLIR</button>`;
 
-                    // TOMBOL HAPUS
                     var deleteButton = `<button onclick="hapusPelanggan('${cust.id}', '${cust.name}')" class="btn-hapus">HAPUS</button>`;
 
                     list.innerHTML += `
                         <div class="customer-card">
                             <div>
                                 <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
-                                <small style="color: gray;">${cust.customer_code} | Paket: ${cust.package_name} | PPPoE: ${cust.pppoe_username}</small><br>
+                                <small style="color: gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
                                 <small style="color: ${statusColor}; font-weight: bold;">● ${statusTextDisplay}</small>
                             </div>
                             <div class="btn-group">
