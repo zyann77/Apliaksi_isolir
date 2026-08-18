@@ -1,59 +1,56 @@
-// Supabase Edge Function: Mengirim perintah Isolir ke MikroTik
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req) => {
   try {
-    const { customerId, action } = await req.json()
-    
-    // Inisialisasi Supabase Client dengan Service Role Key
+    const { customer_id, action, router_id } = await req.json() // action: 'ISOLATE' atau 'UNISOLATE'
+
+    // 1. Setup Supabase Client untuk ambil data router & customer
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
-    // Dapatkan data pelanggan & router (Logika DB)
-    const { data: customer } = await supabaseClient
-      .from('customers')
-      .select('*, routers(*)')
-      .eq('id', customerId)
-      .single()
-
-    if (!customer) throw new Error("Client not found")
-
-    // Kredensial MikroTik diambil dari Supabase Vault/Environment, BUKAN frontend
-    const mkUser = customer.routers.username;
-    const mkPass = Deno.env.get(`ROUTER_SECRET_${customer.routers.secret_reference}`);
-    const mkHost = customer.routers.host;
-
-    // Menggunakan RouterOS v7 REST API (HTTPS)
-    // Endpoint untuk mengubah profile PPPoE user menjadi "ISOLIR"
-    const mkEndpoint = `https://${mkHost}/rest/ppp/secret/${customer.pppoe_username}`;
+    // 2. Ambil credential Router & Data Customer PPPoE
+    const { data: customer } = await supabaseClient.from('customers').select('*').eq('id', customer_id).single();
+    const { data: router } = await supabaseClient.from('routers').select('*').eq('id', router_id).single();
     
-    const profile = action === 'ISOLATE' ? 'ISOLIR' : customer.package_name;
+    // Asumsi menggunakan RouterOS v7.1+ REST API (Sangat ringan & cocok dengan Serverless)
+    // URL format: https://[ROUTER_IP]/rest/ppp/secret
+    const mktUrl = `http://${router.host}/rest/ppp/secret/${customer.pppoe_username}`;
+    
+    // MikroTik Basic Auth
+    const authHeader = "Basic " + btoa(`${router.username}:${router.secret_reference}`);
+    
+    // 3. Tentukan profile MikroTik berdasarkan Action
+    const targetProfile = action === 'ISOLATE' ? 'ISOLIR' : 'DEFAULT_PROFILE'; // Sesuaikan
 
-    const response = await fetch(mkEndpoint, {
+    const mktResponse = await fetch(mktUrl, {
       method: 'PATCH',
       headers: {
-        'Authorization': 'Basic ' + btoa(`${mkUser}:${mkPass}`),
+        'Authorization': authHeader,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ profile: profile })
+      body: JSON.stringify({ profile: targetProfile })
     });
 
-    if (!response.ok) throw new Error("MikroTik API Failed");
+    if (mktResponse.ok) {
+        // Update database Supabase status pelanggan
+        await supabaseClient.from('customers').update({ 
+            isolation_status: action === 'ISOLATE' ? 'ISOLATED' : 'NORMAL' 
+        }).eq('id', customer_id);
 
-    // Catat log di database & Update status
-    await supabaseClient.from('customers').update({ 
-      isolation_status: action === 'ISOLATE',
-      connection_status: action === 'ISOLATE' ? 'ISOLATED' : 'ACTIVE'
-    }).eq('id', customerId);
+        return new Response(JSON.stringify({ success: true, message: `Berhasil ${action} di MikroTik` }), {
+            headers: { "Content-Type": "application/json" },
+        })
+    } else {
+        throw new Error("Gagal menghubungi MikroTik API");
+    }
 
-    return new Response(JSON.stringify({ status: "SUCCESS", message: `Client ${action}D` }), {
-      headers: { "Content-Type": "application/json" },
-    })
-    
   } catch (error) {
-    return new Response(JSON.stringify({ status: "ERROR", message: error.message }), { status: 400 })
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { "Content-Type": "application/json" },
+      status: 400,
+    })
   }
 })
