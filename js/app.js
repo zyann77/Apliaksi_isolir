@@ -1,4 +1,4 @@
-// INIT SUPABASE (KREDENSIAL TERBARU)
+// INIT SUPABASE
 const SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -66,7 +66,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('active')
 // DATA INITIALIZATION
 async function initData() {
     try {
-        await loadPackages(); // PENTING: Load Daftar Paket Dulu!
+        await loadPackages(); 
         await Promise.all([loadCustomers(), loadPayments()]);
         calcDashboard();
     } catch(e) { console.error("Error Initialize:", e); }
@@ -74,13 +74,11 @@ async function initData() {
 
 const formatRp = (angka) => "Rp " + (Number(angka) || 0).toLocaleString('id-ID');
 
-// MENGAMBIL DAFTAR PAKET UNTUK DROPDOWN + FITUR MAGIC AUTO-INJECT
+// MENGAMBIL DAFTAR PAKET
 async function loadPackages() {
     let { data, error } = await db.from('packages').select('*').eq('status', 'ACTIVE');
     
-    // 🚀 FITUR MAGIC: JIKA TABEL PAKET DI SUPABASE KOSONG, OTOMATIS BIKIN 5 PAKET INI
     if (!data || data.length === 0) {
-        console.log("Menyuntikkan 5 Paket Default ke Supabase...");
         const defaultPackages = [
             { name: 'Paket 10 Mbps', speed: '10 Mbps', price: 150000, ppp_profile: 'profile1-10mbps', status: 'ACTIVE' },
             { name: 'Paket 20 Mbps', speed: '20 Mbps', price: 200000, ppp_profile: 'profile2-20mbps', status: 'ACTIVE' },
@@ -88,11 +86,7 @@ async function loadPackages() {
             { name: 'Paket 7 Mbps', speed: '7 Mbps', price: 100000, ppp_profile: 'profile4-7mbps', status: 'ACTIVE' },
             { name: 'Profile 5', speed: 'Custom', price: 50000, ppp_profile: 'profile5', status: 'ACTIVE' }
         ];
-        
-        // Memasukkan ke database Supabase
         await db.from('packages').insert(defaultPackages);
-        
-        // Tarik datanya lagi setelah berhasil dibuat
         let res = await db.from('packages').select('*').eq('status', 'ACTIVE');
         data = res.data || [];
     }
@@ -109,7 +103,7 @@ async function loadPackages() {
     }
 }
 
-// MENGAMBIL PELANGGAN DAN JOIN DENGAN TABEL PAKET
+// MENGAMBIL PELANGGAN
 async function loadCustomers() {
     let { data, error } = await db.from('customers').select('*, packages(ppp_profile, price)').order('created_at', { ascending: false });
     if(error) console.error("Error Customers:", error);
@@ -117,6 +111,7 @@ async function loadCustomers() {
     renderCustomerList(globalCustomers);
 }
 
+// MENGAMBIL PEMBAYARAN
 async function loadPayments() {
     let { data, error } = await db.from('payments').select('*');
     if(error) console.error("Error Payments:", error);
@@ -160,23 +155,44 @@ function renderCustomerList(data) {
     });
 }
 
-// DASHBOARD CALCULATIONS
+// DASHBOARD CALCULATIONS (SISTEM ANTI MELESET)
 function calcDashboard() {
     let tAct = 0, tIso = 0, outstanding = 0, unpaidCount = 0;
-    let currMonth = new Date().getMonth();
+    
+    // Tarik Waktu Saat Ini
+    let d = new Date();
+    // Bikin string patokan bulan tagihan: contoh "2026-08-01"
+    let currentBillingStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    // Bikin string patokan hari ini: contoh "2026-08-18"
+    let todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     
     globalCustomers.forEach(c => {
         c.isolation_status === 'ISOLATED' ? tIso++ : tAct++;
-        let hasPaid = globalPayments.some(p => p.customer_id === c.id && new Date(p.created_at).getMonth() === currMonth);
+        // Cek pembayaran dengan mencocokkan kolom billing_period yang pasti sama string-nya
+        let hasPaid = globalPayments.some(p => p.customer_id === c.id && p.billing_period === currentBillingStr);
         if(!hasPaid) { outstanding += (Number(c.packages?.price) || 0); unpaidCount++; }
     });
     
     let income = 0, incomeToday = 0;
-    let today = new Date().getDate();
+    
     globalPayments.forEach(p => { 
-        let pd = new Date(p.created_at);
-        if(pd.getMonth() === currMonth) income += parseFloat(p.amount); 
-        if(pd.getDate() === today && pd.getMonth() === currMonth) incomeToday += parseFloat(p.amount);
+        // Kalau tagihannya buat bulan ini, tambahkan ke Pendapatan Bulan Ini
+        if (p.billing_period === currentBillingStr) {
+            income += parseFloat(p.amount);
+        }
+        
+        // Cek tanggal masuknya uang pakai split 'T' biar aman dari timezone
+        let pDateStr = "";
+        if (p.payment_date) {
+            pDateStr = p.payment_date.split('T')[0];
+        } else if (p.created_at) {
+            pDateStr = p.created_at.split('T')[0];
+        }
+
+        // Kalau tanggal masuk uang sama dengan hari ini, tambahkan ke Pendapatan Hari Ini
+        if (pDateStr === todayStr) {
+            incomeToday += parseFloat(p.amount);
+        }
     });
 
     document.getElementById('dash-income').innerText = formatRp(income);
@@ -209,20 +225,21 @@ function filterBilling(type, el) {
 function renderInvoiceList() {
     let list = document.getElementById('invoice-list');
     list.innerHTML = '';
-    let currMonth = new Date().getMonth();
-    let today = new Date().getDate();
+    let d = new Date();
+    let currentBillingStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    let todayDate = d.getDate();
     let countToday = 0;
 
     globalCustomers.forEach(cust => {
-        let hasPaid = globalPayments.some(p => p.customer_id === cust.id && new Date(p.created_at).getMonth() === currMonth);
+        let hasPaid = globalPayments.some(p => p.customer_id === cust.id && p.billing_period === currentBillingStr);
         if(hasPaid) return; 
         
         let dueDateNum = Number(cust.due_date);
-        if(dueDateNum === today) countToday++;
-        if(currentBillingFilter === 'hari-ini' && dueDateNum !== today) return;
+        if(dueDateNum === todayDate) countToday++;
+        if(currentBillingFilter === 'hari-ini' && dueDateNum !== todayDate) return;
 
-        let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
-        let invNo = "INV-" + new Date().getFullYear() + String(currMonth + 1).padStart(2,'0') + "-" + String(cust.customer_code).replace('CUST-','');
+        let curBulanStr = d.toLocaleString('id-ID', {month:'long', year:'numeric'});
+        let invNo = "INV-" + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + "-" + String(cust.customer_code).replace('CUST-','');
         let packName = cust.packages?.ppp_profile || '-';
         let packPrice = cust.packages?.price || 0;
 
@@ -389,6 +406,7 @@ document.getElementById('payment-form').addEventListener('submit', async (e) => 
     let method = document.getElementById('pay-method').value;
     let cust = globalCustomers.find(c => String(c.id) === String(id));
     
+    // FORMAT TANGGAL PASTIKAN BENAR (YYYY-MM-01)
     let d = new Date();
     let billingPeriod = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
 
@@ -415,8 +433,10 @@ document.getElementById('payment-form').addEventListener('submit', async (e) => 
         
         await initData();
         activeCust = globalCustomers.find(c => String(c.id) === String(id));
-        openDetail(id);
-        setTimeout(() => { document.querySelectorAll('.s-tab')[1].click(); }, 300);
+        if(activeCust) {
+            openDetail(id);
+            setTimeout(() => { document.querySelectorAll('.s-tab')[1].click(); }, 300);
+        }
 
     } catch(err) { 
         alert("Gagal Membayar: " + err.message); 
