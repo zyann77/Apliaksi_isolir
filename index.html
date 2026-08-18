@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ISP Manager Premium</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Font SF Pro Display / Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Ionicons for premium mobile icons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+</head>
+<body>
+
+    <!-- App Container -->
+    <div id="app-container">
+        
+        <!-- HEADER -->
+        <header class="glass-header">
+            <div class="header-content">
+                <div class="greeting">
+                    <p id="realtime-date">Selasa, 18 Ags</p>
+                    <h2>Halo, Admin 👋</h2>
+                </div>
+                <div class="system-status">
+                    <span class="status-dot green pulse"></span> MikroTik
+                </div>
+            </div>
+        </header>
+
+        <!-- VIEWS -->
+        <main id="main-content">
+            
+            <!-- 1. DASHBOARD VIEW -->
+            <section id="view-dashboard" class="view active">
+                <div class="stats-grid">
+                    <div class="stat-card glass-card">
+                        <ion-icon name="people" class="icon-blue"></ion-icon>
+                        <h3 id="stat-total">0</h3>
+                        <p>Total Pelanggan</p>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <ion-icon name="checkmark-circle" class="icon-green"></ion-icon>
+                        <h3 id="stat-aktif">0</h3>
+                        <p>Aktif</p>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <ion-icon name="warning" class="icon-yellow"></ion-icon>
+                        <h3 id="stat-warning">0</h3>
+                        <p>Jatuh Tempo</p>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <ion-icon name="ban" class="icon-red"></ion-icon>
+                        <h3 id="stat-isolir">0</h3>
+                        <p>Terisolir</p>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <h3>Notifikasi Terbaru</h3>
+                </div>
+                <div class="notification-list">
+                    <div class="notif-item orange-glow">
+                        <ion-icon name="alert-circle"></ion-icon>
+                        <div>
+                            <h4>8 Pelanggan</h4>
+                            <p>Melewati batas jatuh tempo hari ini</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. CUSTOMER LIST VIEW -->
+            <section id="view-customers" class="view hidden">
+                <div class="search-bar glass-card">
+                    <ion-icon name="search"></ion-icon>
+                    <input type="text" id="search-input" placeholder="Cari nama, ID, atau no HP...">
+                </div>
+                
+                <div class="filter-chips">
+                    <span class="chip active">Semua</span>
+                    <span class="chip">Aktif</span>
+                    <span class="chip">Terisolir</span>
+                </div>
+
+                <div id="customer-list" class="list-container">
+                    <!-- Data diload via JS -->
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FAB (Floating Action Button) -->
+        <button class="fab shadow-lg" onclick="openModal('add-customer-modal')">
+            <ion-icon name="add"></ion-icon>
+        </button>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="bottom-nav glass-nav">
+            <a href="#" class="nav-item active" data-target="view-dashboard">
+                <ion-icon name="home"></ion-icon>
+                <span>Beranda</span>
+            </a>
+            <a href="#" class="nav-item" data-target="view-customers">
+                <ion-icon name="people"></ion-icon>
+                <span>Pelanggan</span>
+            </a>
+            <a href="#" class="nav-item" data-target="view-payments">
+                <ion-icon name="wallet"></ion-icon>
+                <span>Tagihan</span>
+            </a>
+            <a href="#" class="nav-item" data-target="view-settings">
+                <ion-icon name="settings"></ion-icon>
+                <span>Sistem</span>
+            </a>
+        </nav>
+
+    </div>
+
+    <!-- Modals & Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
