@@ -101,3 +101,25 @@ body::before {
 .nav-item { background: none; border: none; color: var(--text-dim); font-family: var(--font-mono); font-size: 0.7rem; padding: 0.8rem; cursor: pointer; transition: 0.3s; }
 .nav-item.active { color: var(--neon-green); text-shadow: 0 0 8px var(--neon-green); }
 .app-footer { text-align: center; font-family: var(--font-mono); font-size: 0.6rem; color: var(--dark-green); padding: 1rem; }
+/* Splash Screen Styles */
+.terminal-text {
+    padding: 2rem;
+    font-family: var(--font-mono);
+    color: var(--neon-green);
+    line-height: 1.8;
+}
+.brand-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 100%;
+}
+.subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-top: 0.5rem;
+}
