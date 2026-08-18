@@ -157,10 +157,14 @@
                     <label>No. WhatsApp (Awali 62)</label>
                     <input type="number" id="cust-phone" placeholder="Contoh: 628123456789" required>
                 </div>
-                <!-- TAMBAHAN BARU: INPUT NAMA PAKET -->
                 <div class="form-group">
-                    <label>Nama Paket (Contoh: 10Mbps / 20Mbps)</label>
+                    <label>Nama Paket (Contoh: Gold 20 Mbps)</label>
                     <input type="text" id="cust-package" required>
+                </div>
+                <!-- TAMBAHAN BARU: HARGA PAKET -->
+                <div class="form-group">
+                    <label>Harga Paket (Angka saja, Contoh: 150000)</label>
+                    <input type="number" id="cust-price" required>
                 </div>
                 <div class="form-group">
                     <label>Username PPPoE</label>
@@ -235,7 +239,7 @@
             document.getElementById('modal-customer').classList.remove('active');
         });
 
-        // SIMPAN PELANGGAN KE SUPABASE
+        // SIMPAN PELANGGAN KE SUPABASE 
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
             var btnSave = document.getElementById('btn-save-cust');
@@ -244,12 +248,12 @@
 
             var nama = document.getElementById('cust-name').value;
             var hp = document.getElementById('cust-phone').value;
-            var pkt = document.getElementById('cust-package').value; // AMBIL DATA PAKET
+            var pkt = document.getElementById('cust-package').value;
+            var hrg = document.getElementById('cust-price').value; // DATA HARGA PAKET
             var user = document.getElementById('cust-user').value;
             var pass = document.getElementById('cust-pass').value;
             var due = document.getElementById('cust-due').value;
 
-            // Generate Kode Pelanggan
             var randomCode = "NET-" + Math.floor(100000 + Math.random() * 900000);
 
             try {
@@ -257,7 +261,8 @@
                     customer_code: randomCode,
                     name: nama,
                     phone: hp,
-                    package_name: pkt, // KIRIM DATA PAKET KE DATABASE
+                    package_name: pkt,
+                    package_price: parseInt(hrg), // KIRIM HARGA PAKET (WAJIB ISI)
                     pppoe_username: user,
                     pppoe_password: pass,
                     due_date: parseInt(due),
@@ -266,7 +271,7 @@
 
                 if (error) throw error;
 
-                alert("Pelanggan berhasil ditambahkan!");
+                alert("Mantap bos! Pelanggan berhasil ditambahkan!");
                 document.getElementById('form-customer').reset();
                 document.getElementById('modal-customer').classList.remove('active');
                 loadCustomers();
@@ -312,7 +317,7 @@
 
                 if (error) throw error;
 
-                alert(`Mantap! Pelanggan berhasil diubah menjadi ${actionText}.`);
+                alert(`Berhasil! Pelanggan telah diubah menjadi ${actionText}.`);
                 loadCustomers();
             } catch (err) {
                 alert("Error: " + err.message);
@@ -363,7 +368,7 @@
                         <div class="customer-card">
                             <div>
                                 <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
-                                <small style="color: gray;">${cust.customer_code} | Paket: ${cust.package_name || '-'} | PPPoE: ${cust.pppoe_username}</small><br>
+                                <small style="color: gray;">${cust.customer_code} | Paket: ${cust.package_name || '-'} (Rp${cust.package_price || '0'}) | PPPoE: ${cust.pppoe_username}</small><br>
                                 <small style="color: ${statusColor}; font-weight: bold;">● ${statusTextDisplay}</small>
                             </div>
                             <div>
