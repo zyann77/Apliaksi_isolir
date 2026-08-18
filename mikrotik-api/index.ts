@@ -8,14 +8,12 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle preflight request CORS dari browser
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     const body = await req.json()
-    // Mendukung request dari frontend baru (pakai pppoe_username) atau frontend lama (customer_id)
     const action = body.action; 
     const pppoe_username = body.pppoe_username;
     const customer_id = body.customer_id;
@@ -38,23 +36,20 @@ serve(async (req) => {
 
     if (!customer) throw new Error("Data Pelanggan tidak ditemukan di database");
 
-    // 3. Cari data router tempat pelanggan tersebut berada
+    // 3. Cari data router
     const { data: router } = await supabaseClient.from('routers').select('*').eq('id', customer.router_id).single();
     if (!router) throw new Error("Router MikroTik tidak ditemukan");
 
-    // Header Auth MikroTik (Basic Auth)
     const authHeader = "Basic " + btoa(`${router.username}:${router.secret_reference}`);
 
     // ==========================================
     // 🚀 LOGIKA 1: CEK STATUS (UPTIME, REMOTE, LOGOUT)
     // ==========================================
     if (action === 'STATUS') {
-        // Ambil data Uptime & IP (Koneksi Aktif)
         const activeUrl = `http://${router.host}/rest/ppp/active?name=${customer.pppoe_username}`;
         const activeRes = await fetch(activeUrl, { headers: { 'Authorization': authHeader } });
         const activeData = activeRes.ok ? await activeRes.json() : [];
 
-        // Ambil data Last Logout dari Secret
         const secretUrl = `http://${router.host}/rest/ppp/secret?name=${customer.pppoe_username}`;
         const secretRes = await fetch(secretUrl, { headers: { 'Authorization': authHeader } });
         const secretData = secretRes.ok ? await secretRes.json() : [];
@@ -82,10 +77,7 @@ serve(async (req) => {
     // ⚡ LOGIKA 2: EKSEKUSI ISOLIR / UNISOLIR
     // ==========================================
     const isIsolate = action === 'ISOLATE' || action === 'ISOLATED';
-    
-    // Jika Isolir, gunakan profile 'ISOLIR'. Jika normal, kembalikan ke profile aslinya
     const targetProfile = isIsolate ? 'ISOLIR' : (customer.packages?.ppp_profile || 'default');
-
     const mktUrl = `http://${router.host}/rest/ppp/secret/${customer.pppoe_username}`;
     
     const mktResponse = await fetch(mktUrl, {
@@ -98,14 +90,13 @@ serve(async (req) => {
     });
 
     if (mktResponse.ok) {
-        // Hapus koneksi aktif agar router memaksa pelanggan reconnect menggunakan profile baru
         try {
             const activeCheckUrl = `http://${router.host}/rest/ppp/active?name=${customer.pppoe_username}`;
             const activeCheckRes = await fetch(activeCheckUrl, { headers: { 'Authorization': authHeader } });
             const activeConns = activeCheckRes.ok ? await activeCheckRes.json() : [];
             
             if (activeConns.length > 0) {
-                const activeId = activeConns[0]['.id']; // Ambil ID internal koneksi aktif
+                const activeId = activeConns[0]['.id'];
                 await fetch(`http://${router.host}/rest/ppp/active/${activeId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': authHeader }
@@ -120,7 +111,7 @@ serve(async (req) => {
         })
     } else {
         const errMsg = await mktResponse.text();
-        throw new Error(`Gagal menghubungi MikroTik API: ${errMsg}`);
+        throw new Error(`Gagal menghubungi MikroTik: ${errMsg}`);
     }
 
   } catch (error) {
