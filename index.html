@@ -55,35 +55,73 @@
             </div>
         </header>
 
-        <main class="app-content">
-            <!-- Dashboard View -->
-            <section id="dashboard" class="page active">
-                <div class="stats-grid">
-                    <div class="stat-card cyber-card">
-                        <div class="stat-label">TOTAL CLIENT</div>
-                        <div class="stat-value" id="stat-total">0</div>
-                    </div>
-                    <div class="stat-card cyber-card">
-                        <div class="stat-label text-neon">ACTIVE</div>
-                        <div class="stat-value text-neon" id="stat-active">0</div>
-                    </div>
-                    <div class="stat-card cyber-card">
-                        <div class="stat-label text-warning">WARNING</div>
-                        <div class="stat-value text-warning" id="stat-warning">0</div>
-                    </div>
-                    <div class="stat-card cyber-card">
-                        <div class="stat-label text-danger">ISOLATED</div>
-                        <div class="stat-value text-danger" id="stat-isolated">0</div>
-                    </div>
+        <!-- Form Tambah Pelanggan -->
+<section id="add-client" class="page hidden">
+    <div class="cyber-card">
+        <div class="terminal-header mb-4">
+            <span class="pulse-dot"></span> SYSTEM // NEW_CLIENT_ENTRY
+        </div>
+        
+        <form id="form-add-client" onsubmit="customers.save(event)">
+            
+            <!-- NAMA -->
+            <div class="input-group">
+                <label>NAMA PELANGGAN</label>
+                <div class="input-wrapper">
+                    <span class="text-neon">></span>
+                    <input type="text" id="input-nama" placeholder="ENTER NAME..." required autocomplete="off">
                 </div>
+            </div>
 
-                <div class="terminal-monitor cyber-card mt-4">
-                    <div class="terminal-header">SYSTEM LOG</div>
-                    <div class="terminal-body" id="system-log">
-                        <!-- Logs injected via JS -->
-                    </div>
+            <!-- SECRET (PPPoE) -->
+            <div class="input-group">
+                <label>PPP SECRET (USERNAME)</label>
+                <div class="input-wrapper">
+                    <span class="text-neon">></span>
+                    <input type="text" id="input-secret" placeholder="PPPOE USERNAME..." required autocomplete="off">
                 </div>
-            </section>
+            </div>
+            
+            <div class="input-group">
+                <label>PPP PASSWORD</label>
+                <div class="input-wrapper">
+                    <span class="text-neon">></span>
+                    <input type="password" id="input-password" placeholder="••••••••" required>
+                    <button type="button" class="btn-icon" onclick="customers.togglePassword()">👁</button>
+                </div>
+            </div>
+
+            <!-- TANGGAL REGISTRASI -->
+            <div class="input-group">
+                <label>TANGGAL REGISTRASI</label>
+                <div class="input-wrapper">
+                    <span class="text-neon">></span>
+                    <input type="date" id="input-reg-date" required>
+                </div>
+            </div>
+
+            <!-- TANGGAL ISOLIR -->
+            <div class="input-group">
+                <label>TANGGAL ISOLIR (1 - 31)</label>
+                <div class="input-wrapper">
+                    <span class="text-neon">></span>
+                    <input type="number" id="input-iso-date" min="1" max="31" placeholder="DAY OF MONTH..." required>
+                </div>
+                <small class="terminal-font text-dim mt-1 d-block">Sistem akan otomatis isolir pada tanggal ini setiap bulan jika belum lunas.</small>
+            </div>
+
+            <!-- SUBMIT ACTION -->
+            <button type="submit" class="cyber-btn mt-4 w-100" id="btn-save-client">
+                [ EXECUTE: SAVE_CLIENT ]
+            </button>
+        </form>
+
+        <!-- LOG TERMINAL UNTUK STATUS SIMPAN -->
+        <div id="save-status-log" class="terminal-font mt-4 text-neon hidden">
+            <!-- Pesan sukses/error muncul di sini -->
+        </div>
+    </div>
+</section>
 
             <!-- Other views (Clients, Payments, etc.) will be toggled here -->
             <section id="clients" class="page hidden">
