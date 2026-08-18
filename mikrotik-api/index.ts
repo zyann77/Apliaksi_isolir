@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Wajib ada CORS agar GitHub Pages (web bos) diizinkan mengambil data dari Supabase
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -18,13 +17,11 @@ serve(async (req) => {
     const pppoe_username = body.pppoe_username;
     const customer_id = body.customer_id;
 
-    // 1. Setup Supabase Client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
-    // 2. Cari data customer dari database
     let customer;
     if (pppoe_username) {
         const { data } = await supabaseClient.from('customers').select('*, packages(ppp_profile)').eq('pppoe_username', pppoe_username).single();
@@ -36,48 +33,17 @@ serve(async (req) => {
 
     if (!customer) throw new Error("Data Pelanggan tidak ditemukan di database");
 
-    // 3. Cari data router
     const { data: router } = await supabaseClient.from('routers').select('*').eq('id', customer.router_id).single();
     if (!router) throw new Error("Router MikroTik tidak ditemukan");
 
     const authHeader = "Basic " + btoa(`${router.username}:${router.secret_reference}`);
 
     // ==========================================
-    // 🚀 LOGIKA 1: CEK STATUS (UPTIME, REMOTE, LOGOUT)
-    // ==========================================
-    if (action === 'STATUS') {
-        const activeUrl = `http://${router.host}/rest/ppp/active?name=${customer.pppoe_username}`;
-        const activeRes = await fetch(activeUrl, { headers: { 'Authorization': authHeader } });
-        const activeData = activeRes.ok ? await activeRes.json() : [];
-
-        const secretUrl = `http://${router.host}/rest/ppp/secret?name=${customer.pppoe_username}`;
-        const secretRes = await fetch(secretUrl, { headers: { 'Authorization': authHeader } });
-        const secretData = secretRes.ok ? await secretRes.json() : [];
-
-        let uptime = "";
-        let remote_address = "";
-        let last_logout = "";
-
-        if (activeData && activeData.length > 0) {
-            uptime = activeData[0].uptime || "";
-            remote_address = activeData[0].address || ""; 
-        }
-        if (secretData && secretData.length > 0) {
-            last_logout = secretData[0]['last-logged-out'] || "-";
-        }
-
-        return new Response(JSON.stringify({
-            uptime: uptime,
-            remote_address: remote_address,
-            last_logout: last_logout
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // ==========================================
-    // ⚡ LOGIKA 2: EKSEKUSI ISOLIR / UNISOLIR
+    // ⚡ LOGIKA EKSEKUSI ISOLIR / UNISOLIR
     // ==========================================
     const isIsolate = action === 'ISOLATE' || action === 'ISOLATED';
     const targetProfile = isIsolate ? 'ISOLIR' : (customer.packages?.ppp_profile || 'default');
+    
     const mktUrl = `http://${router.host}/rest/ppp/secret/${customer.pppoe_username}`;
     
     const mktResponse = await fetch(mktUrl, {
@@ -86,7 +52,11 @@ serve(async (req) => {
         'Authorization': authHeader,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ profile: targetProfile })
+      // 🚀 TAMBAHAN: Mengosongkan komentar yang tadinya ada tulisan ",,, Normal"
+      body: JSON.stringify({ 
+          profile: targetProfile,
+          comment: "" 
+      })
     });
 
     if (mktResponse.ok) {
