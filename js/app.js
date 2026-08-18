@@ -93,8 +93,6 @@ function renderCustomerList(data) {
     list.innerHTML = '';
     data.forEach(cust => {
         let isIso = cust.isolation_status === 'ISOLATED';
-        
-        // PENCEGAH ERROR NAMA KOSONG
         let safeName = String(cust.name || 'User');
         let avatar = safeName.charAt(0).toUpperCase();
         if(safeName.length > 1) avatar += safeName.charAt(1).toUpperCase();
@@ -187,8 +185,6 @@ function renderInvoiceList() {
         if(currentBillingFilter === 'hari-ini' && dueDateNum !== today) return;
 
         let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
-        
-        // PENCEGAH ERROR SUBSTRING JIKA ID ADALAH ANGKA BUKAN STRING
         let safeIdStr = String(cust.id || "0000").substring(0,4).toUpperCase();
         let invNo = "INV-" + new Date().getFullYear() + String(currMonth + 1).padStart(2,'0') + "-" + safeIdStr;
         
@@ -212,7 +208,7 @@ function renderInvoiceList() {
     document.getElementById('count-today').innerText = countToday;
 }
 
-// OPEN BOTTOM SHEET DETAIL (DUA SLIDE TABS)
+// OPEN BOTTOM SHEET DETAIL
 function openDetail(id) {
     activeCust = globalCustomers.find(c => String(c.id) === String(id));
     if(!activeCust) return;
@@ -246,7 +242,7 @@ function openDetail(id) {
         btnAct.onclick = () => eksekusiMikrotik(activeCust.id, activeCust.pppoe_username, true);
     }
 
-    // Slide 2: WA Preview Generation
+    // Slide 2: WA Preview
     let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
     let safeIdStr2 = String(activeCust.id || "0000").substring(0,4).toUpperCase();
     let invNo = "INV-" + new Date().getFullYear() + String(new Date().getMonth()+1).padStart(2,'0') + "-" + safeIdStr2;
@@ -257,7 +253,7 @@ function openDetail(id) {
     let notaMsg = `LUNAS ✅\n\nHalo *${safeName}*,\n\nPembayaran tagihan internet *${activeCust.packname || '-'}* periode *${curBulanStr}* telah kami terima.\n\n💰 *Nominal: ${formatRp(activeCust.harga)}*\n📅 Tgl Lunas: *${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}*\n\nTerima kasih atas pembayaran Anda! 🙏`;
     document.getElementById('preview-nota').innerText = notaMsg;
 
-    // Reset ke tab Info
+    // Show Panel
     document.querySelectorAll('.s-tab')[0].click();
     document.getElementById('detail-sheet').classList.add('active');
 }
@@ -274,7 +270,7 @@ function kirimNotaWA() {
     window.open(`https://wa.me/${activeCust.phone || ''}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// FORM TAMBAH / EDIT
+// FORM TAMBAH & EDIT (MENGGUNAKAN ERROR TRAP)
 function bukaModalTambah() {
     document.getElementById('customer-form').reset();
     document.getElementById('form-id').value = "";
@@ -286,14 +282,14 @@ function openEditModal() {
     if(!activeCust) return;
     document.getElementById('form-title').innerText = "Edit Data Pelanggan";
     document.getElementById('form-id').value = activeCust.id;
-    document.getElementById('cust-name').value = activeCust.name;
-    document.getElementById('cust-phone').value = activeCust.phone;
+    document.getElementById('cust-name').value = activeCust.name || "";
+    document.getElementById('cust-phone').value = activeCust.phone || "";
     document.getElementById('cust-address').value = activeCust.address || "";
-    document.getElementById('cust-package').value = activeCust.packname;
-    document.getElementById('cust-price').value = activeCust.harga;
-    document.getElementById('cust-user').value = activeCust.pppoe_username;
-    document.getElementById('cust-pass').value = activeCust.pppoe_password;
-    document.getElementById('cust-due').value = activeCust.due_date;
+    document.getElementById('cust-package').value = activeCust.packname || "";
+    document.getElementById('cust-price').value = activeCust.harga || "";
+    document.getElementById('cust-user').value = activeCust.pppoe_username || "";
+    document.getElementById('cust-pass').value = activeCust.pppoe_password || "";
+    document.getElementById('cust-due').value = activeCust.due_date || "";
     
     closeDetailScreen(); 
     openModal('modal-form');
@@ -314,20 +310,36 @@ document.getElementById('customer-form').addEventListener('submit', async (e) =>
     };
 
     let btn = document.getElementById('btn-save-cust');
-    btn.innerText = "Menyimpan...";
+    btn.innerText = "MENYIMPAN...";
+    btn.disabled = true;
+
     try {
         if(id) {
-            await db.from('customers').update(payload).eq('id', id);
+            // EDIT PELANGGAN
+            const { error } = await db.from('customers').update(payload).eq('id', id);
+            if (error) throw error; // Tangkap error jika ada!
+            alert("Perubahan Data Berhasil Disimpan!");
         } else {
+            // TAMBAH PELANGGAN BARU
             payload.isolation_status = 'NORMAL';
-            await db.from('customers').insert([payload]);
+            const { error } = await db.from('customers').insert([payload]);
+            if (error) throw error; // Tangkap error jika ada!
+            alert("Pelanggan Baru Berhasil Ditambahkan!");
         }
+        
         document.getElementById('customer-form').reset();
         closeModal('modal-form');
         await initData();
-        if(id) openDetail(id); 
-    } catch(err) { alert(err.message); }
-    finally { btn.innerText = "SIMPAN DATA"; }
+        if(id) openDetail(id); // Buka lagi detail panelnya setelah di edit
+        
+    } catch(err) { 
+        // JIKA GAGAL, MUNCULKAN PESANNYA DISINI BOS!
+        alert("GAGAL MENYIMPAN!\nPenyebab: " + err.message); 
+        console.error("Save Error:", err);
+    } finally { 
+        btn.innerText = "SIMPAN DATA"; 
+        btn.disabled = false;
+    }
 });
 
 // MODAL BAYAR
@@ -348,7 +360,8 @@ document.getElementById('payment-form').addEventListener('submit', async (e) => 
     let cust = globalCustomers.find(c => String(c.id) === String(id));
     
     try {
-        await db.from('payments').insert([{ customer_id: id, amount: amt, payment_method: method }]);
+        const { error } = await db.from('payments').insert([{ customer_id: id, amount: amt, payment_method: method }]);
+        if (error) throw error;
         
         if(cust && cust.isolation_status === 'ISOLATED') {
             await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
@@ -362,12 +375,14 @@ document.getElementById('payment-form').addEventListener('submit', async (e) => 
         closeModal('modal-pay');
         alert("Pembayaran berhasil dicatat!");
         
-        initData();
+        await initData();
         activeCust = globalCustomers.find(c => String(c.id) === String(id));
         openDetail(id);
         setTimeout(() => { document.querySelectorAll('.s-tab')[1].click(); }, 300);
 
-    } catch(err) { alert(err.message); }
+    } catch(err) { 
+        alert("Gagal Membayar: " + err.message); 
+    }
 });
 
 // MIKROTIK EKSEKUSI
@@ -380,11 +395,16 @@ async function eksekusiMikrotik(customerId, pppoeUser, makeIsolated) {
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
             body: JSON.stringify({ pppoe_username: pppoeUser, action: actionText })
         });
-        await db.from('customers').update({ isolation_status: actionText }).eq('id', customerId);
-        
+        const { error } = await db.from('customers').update({ isolation_status: actionText }).eq('id', customerId);
+        if (error) throw error;
+
         closeDetailScreen();
-        initData();
-    } catch(e) { alert(e.message); document.getElementById('btn-det-action').innerText = "FAILED"; }
+        await initData();
+        openDetail(customerId);
+    } catch(e) { 
+        alert("Gagal Eksekusi: " + e.message); 
+        document.getElementById('btn-det-action').innerText = "FAILED"; 
+    }
 }
 
 // SEARCH FILTER
