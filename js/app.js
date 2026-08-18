@@ -6,12 +6,14 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let globalCustomers = [];
 let globalPayments = [];
 let activeCust = null;
+let lastPaymentData = null; // Menyimpan info nota terakhir
+let currentBillingFilter = 'semua';
 
-// AUTO LOGIN & AUTH
+// AUTO LOGIN
 document.addEventListener("DOMContentLoaded", () => {
     if (localStorage.getItem("isLoggedIn") === "true") {
         document.getElementById('login-screen').classList.remove('active');
-        document.getElementById('app-screen').classList.add('active'); // <-- INI YANG TADI KETINGGALAN BOS 😂
+        document.getElementById('app-screen').classList.add('active');
         initData();
     }
 });
@@ -21,7 +23,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     if (document.getElementById('username').value === "admin" && document.getElementById('password').value === "1234") {
         localStorage.setItem("isLoggedIn", "true"); 
         document.getElementById('login-screen').classList.remove('active');
-        document.getElementById('app-screen').classList.add('active'); // <-- INI JUGA KETINGGALAN
+        document.getElementById('app-screen').classList.add('active');
         initData(); 
     } else {
         document.getElementById('pesan-error').style.display = 'block';
@@ -54,18 +56,15 @@ function closeFab() {
 function openModal(id) { document.getElementById(id).classList.add('active'); closeFab(); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-// DATA INITIALIZATION
+// DATA INIT
 async function initData() {
     await Promise.all([loadCustomers(), loadPayments()]);
     calcDashboard();
 }
 
-// FORMAT RUPIAH
 const formatRp = (angka) => "Rp" + (angka || 0).toLocaleString('id-ID');
 
-// LOAD DATABASE
 async function loadCustomers() {
-    let list = document.getElementById('customer-list');
     let { data } = await db.from('customers').select('*').order('created_at', { ascending: false });
     globalCustomers = data || [];
     renderCustomerList(globalCustomers);
@@ -76,7 +75,7 @@ async function loadPayments() {
     globalPayments = data || [];
 }
 
-// RENDER CARDS
+// RENDER CUSTOMERS
 function renderCustomerList(data) {
     let list = document.getElementById('customer-list');
     list.innerHTML = '';
@@ -109,14 +108,13 @@ function renderCustomerList(data) {
     });
 }
 
-// DASHBOARD CALCULATIONS
+// DASHBOARD
 function calcDashboard() {
     let tAct = 0, tIso = 0, outstanding = 0, unpaidCount = 0;
     let currMonth = new Date().getMonth();
     
     globalCustomers.forEach(c => {
         c.isolation_status === 'ISOLATED' ? tIso++ : tAct++;
-        // Cek Outstanding (Jika tidak ada record payment bulan ini)
         let hasPaid = globalPayments.some(p => p.customer_id === c.id && new Date(p.created_at).getMonth() === currMonth);
         if(!hasPaid) { outstanding += (c.harga || 0); unpaidCount++; }
     });
@@ -129,7 +127,6 @@ function calcDashboard() {
         if(pd.getDate() === today && pd.getMonth() === currMonth) incomeToday += parseFloat(p.amount);
     });
 
-    // Dashboard
     document.getElementById('dash-income').innerText = formatRp(income);
     document.getElementById('dash-income-today').innerText = formatRp(incomeToday);
     document.getElementById('dash-outstanding').innerText = formatRp(outstanding);
@@ -137,30 +134,59 @@ function calcDashboard() {
     document.getElementById('s-online').innerText = tAct;
     document.getElementById('s-iso').innerText = tIso;
 
-    // Billing Center
     document.getElementById('bill-outstanding').innerText = formatRp(outstanding);
     document.getElementById('bill-unpaid-count').innerText = unpaidCount;
-    renderInvoiceList(currMonth);
+    renderInvoiceList();
 }
 
-// RENDER INVOICES
-function renderInvoiceList(currMonth) {
+// BILLING FILTER (HARI INI / SEMUA)
+function filterBilling(type, el) {
+    currentBillingFilter = type;
+    if(el) {
+        document.querySelectorAll('#view-billing .chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        if(type === 'hari-ini') {
+            el.style.background = "var(--danger)";
+            el.style.color = "white";
+        } else {
+            document.querySelectorAll('#view-billing .chip')[1].style.background = "var(--danger-light)";
+            document.querySelectorAll('#view-billing .chip')[1].style.color = "var(--danger)";
+        }
+    }
+    renderInvoiceList();
+}
+
+function renderInvoiceList() {
     let list = document.getElementById('invoice-list');
     list.innerHTML = '';
+    let currMonth = new Date().getMonth();
+    let today = new Date().getDate();
+    let countToday = 0;
+
     globalCustomers.forEach(cust => {
         let hasPaid = globalPayments.some(p => p.customer_id === cust.id && new Date(p.created_at).getMonth() === currMonth);
-        let statusColor = hasPaid ? "var(--success)" : "var(--danger)";
-        let statusText = hasPaid ? "LUNAS" : "BELUM BAYAR";
-        
+        if(hasPaid) return; // Hanya tampilkan yang Belum Bayar
+        if(cust.due_date === today) countToday++;
+        if(currentBillingFilter === 'hari-ini' && cust.due_date !== today) return;
+
+        let waMsg = `Halo ${cust.name}, kami dari ISP CENTER. Mengingatkan tagihan internet bulan ini sebesar ${formatRp(cust.harga)}. Jatuh tempo hari ini (tgl ${cust.due_date}). Mohon segera melakukan pembayaran. Terima kasih.`;
+
         list.innerHTML += `
-            <div class="cust-card" onclick="openDetail('${cust.id}')">
+            <div class="cust-card">
                 <div class="cc-top" style="margin-bottom:5px;">
-                    <div class="cc-name">${cust.name}</div>
-                    <div style="font-size:11px; font-weight:800; color:${statusColor};">● ${statusText}</div>
+                    <div class="cc-name" onclick="openDetail('${cust.id}')">${cust.name}</div>
+                    <div style="font-size:11px; font-weight:800; color:var(--danger);">● BELUM BAYAR</div>
                 </div>
-                <div style="font-size:12px; color:var(--text-muted); font-weight:600;">${cust.packname || '-'} — ${formatRp(cust.harga)}</div>
+                <div style="font-size:12px; color:var(--text-muted); font-weight:600; margin-bottom:12px;">${cust.packname || '-'} — ${formatRp(cust.harga)}</div>
+                <div class="cc-bot">
+                    <span style="color:var(--navy); font-size:13px;">Tgl ${cust.due_date}</span>
+                    <a href="https://wa.me/${cust.phone}?text=${encodeURIComponent(waMsg)}" target="_blank" style="text-decoration:none;">
+                        <button class="btn-sm" style="background:#25D366; color:white; border:none;">💬 Tagih WA</button>
+                    </a>
+                </div>
             </div>`;
     });
+    document.getElementById('count-today').innerText = countToday;
 }
 
 // OPEN BOTTOM SHEET DETAIL
@@ -181,7 +207,6 @@ function openDetail(id) {
     document.getElementById('det-status-badge').innerText = isIso ? "ISOLATED" : "ONLINE";
     document.getElementById('det-status-badge').className = isIso ? "id-badge isolated" : "id-badge";
 
-    // Format Pesan WA Tagihan
     let waMsg = `Halo ${activeCust.name}, kami dari ISP CENTER. Tagihan internet Anda sebesar ${formatRp(activeCust.harga)}. Jatuh tempo tgl ${activeCust.due_date}. Terima kasih.`;
     document.getElementById('det-wa-link').href = `https://wa.me/${activeCust.phone}?text=${encodeURIComponent(waMsg)}`;
 
@@ -201,6 +226,62 @@ function openDetail(id) {
 
 function closeDetailScreen() { document.getElementById('detail-sheet').classList.remove('active'); activeCust = null;}
 
+// MODAL EDIT DATA (MUNCUL DARI TOMBOL EDIT DI DETAIL)
+function openEditModal() {
+    if(!activeCust) return;
+    document.getElementById('form-title').innerText = "Edit Data Pelanggan";
+    document.getElementById('form-id').value = activeCust.id;
+    document.getElementById('cust-name').value = activeCust.name;
+    document.getElementById('cust-phone').value = activeCust.phone;
+    document.getElementById('cust-package').value = activeCust.packname;
+    document.getElementById('cust-price').value = activeCust.harga;
+    document.getElementById('cust-user').value = activeCust.pppoe_username;
+    document.getElementById('cust-pass').value = activeCust.pppoe_password;
+    document.getElementById('cust-due').value = activeCust.due_date;
+    
+    closeDetailScreen(); 
+    openModal('modal-form');
+}
+
+// BUKA FORM TAMBAH (KOSONG)
+function bukaModalTambah() {
+    document.getElementById('customer-form').reset();
+    document.getElementById('form-id').value = "";
+    document.getElementById('form-title').innerText = "Customer Baru";
+    openModal('modal-form');
+}
+
+// ADD/EDIT SUBMIT KE DATABASE
+document.getElementById('customer-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    let id = document.getElementById('form-id').value;
+    let payload = {
+        name: document.getElementById('cust-name').value,
+        phone: document.getElementById('cust-phone').value,
+        packname: document.getElementById('cust-package').value,
+        harga: parseInt(document.getElementById('cust-price').value),
+        pppoe_username: document.getElementById('cust-user').value,
+        pppoe_password: document.getElementById('cust-pass').value,
+        due_date: parseInt(document.getElementById('cust-due').value)
+    };
+
+    let btn = document.getElementById('btn-save-cust');
+    btn.innerText = "Menyimpan...";
+    try {
+        if(id) {
+            await db.from('customers').update(payload).eq('id', id); // JIKA EDIT
+        } else {
+            payload.isolation_status = 'NORMAL';
+            await db.from('customers').insert([payload]); // JIKA BARU
+        }
+        document.getElementById('customer-form').reset();
+        closeModal('modal-form');
+        await initData();
+        if(id) openDetail(id); // Buka lagi layarnya kalau habis diedit
+    } catch(err) { alert(err.message); }
+    finally { btn.innerText = "SIMPAN CUSTOMER"; }
+});
+
 // MODAL BAYAR
 function bukaModalBayar() {
     if(!activeCust) return;
@@ -216,10 +297,16 @@ document.getElementById('payment-form').addEventListener('submit', async (e) => 
     let id = document.getElementById('pay-id').value;
     let amt = parseInt(document.getElementById('pay-amount').value);
     let method = document.getElementById('pay-method').value;
+    let cust = globalCustomers.find(c => c.id === id);
     
     try {
         await db.from('payments').insert([{ customer_id: id, amount: amt, payment_method: method }]);
-        let cust = globalCustomers.find(c => c.id === id);
+        
+        // Simpan Data Nota Untuk Print / WA
+        lastPaymentData = {
+            name: cust.name, packname: cust.packname, amount: amt, method: method, date: new Date().toLocaleString('id-ID'), phone: cust.phone
+        };
+
         if(cust && cust.isolation_status === 'ISOLATED') {
             await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
                 method: 'POST',
@@ -228,39 +315,43 @@ document.getElementById('payment-form').addEventListener('submit', async (e) => 
             });
             await db.from('customers').update({ isolation_status: 'NORMAL' }).eq('id', id);
         }
+
         closeModal('modal-pay');
-        showSuccessAnim();
+        openModal('success-anim'); // Buka Animasi + Nota
+        
+        // Set tombol WA Nota
+        let waNota = `LUNAS ✅\n\nHalo Bapak/Ibu ${cust.name}, pembayaran internet Anda sebesar ${formatRp(amt)} telah kami terima.\n\nMetode: ${method}\nTanggal: ${lastPaymentData.date}\n\nTerima kasih atas pembayaran Anda!`;
+        document.getElementById('btn-wa-receipt').onclick = () => {
+            window.open(`https://wa.me/${cust.phone}?text=${encodeURIComponent(waNota)}`, '_blank');
+        };
+
         initData();
     } catch(err) { alert(err.message); }
 });
 
-function showSuccessAnim() {
-    let anim = document.getElementById('success-anim');
-    anim.classList.add('active');
-    setTimeout(() => { anim.classList.remove('active'); }, 1500);
+// FUNGSI PRINT STRUK
+function printReceipt() {
+    if(!lastPaymentData) return;
+    let printWin = window.open('', '', 'width=400,height=600');
+    printWin.document.write(`
+        <html><head><title>Nota Pelunasan</title></head>
+        <body style="font-family:monospace; padding:10px; text-align:center;">
+            <h2 style="margin:0;">ISP CENTER</h2>
+            <p style="font-size:12px; margin:5px 0;">Struk Bukti Pembayaran</p>
+            <p>================================</p>
+            <p style="text-align:left; margin:5px 0;">Tanggal: ${lastPaymentData.date}</p>
+            <p style="text-align:left; margin:5px 0;">Nama   : ${lastPaymentData.name}</p>
+            <p style="text-align:left; margin:5px 0;">Paket  : ${lastPaymentData.packname}</p>
+            <p style="text-align:left; margin:5px 0;">Metode : ${lastPaymentData.method}</p>
+            <p>================================</p>
+            <h2 style="margin:10px 0;">TOTAL: ${formatRp(lastPaymentData.amount)}</h2>
+            <p>================================</p>
+            <p style="font-size:12px;">Terima kasih atas pembayaran Anda.</p>
+            <script>window.print(); window.close();<\/script>
+        </body></html>
+    `);
+    printWin.document.close();
 }
-
-// ADD/EDIT CUSTOMER
-document.getElementById('customer-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    let payload = {
-        name: document.getElementById('cust-name').value,
-        phone: document.getElementById('cust-phone').value,
-        packname: document.getElementById('cust-package').value,
-        harga: parseInt(document.getElementById('cust-price').value),
-        pppoe_username: document.getElementById('cust-user').value,
-        pppoe_password: document.getElementById('cust-pass').value,
-        due_date: parseInt(document.getElementById('cust-due').value),
-        isolation_status: 'NORMAL'
-    };
-
-    try {
-        await db.from('customers').insert([payload]);
-        document.getElementById('customer-form').reset();
-        closeModal('modal-form');
-        initData();
-    } catch(err) { alert(err.message); }
-});
 
 // MIKROTIK EKSEKUSI
 async function eksekusiMikrotik(customerId, pppoeUser, makeIsolated) {
