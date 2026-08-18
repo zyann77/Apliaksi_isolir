@@ -153,3 +153,25 @@ body { background: var(--bg-light); color: var(--text-main); overflow: hidden;}
 .bottom-sheet {
     touch-action: pan-y; /* Penting untuk gesture mobile */
 }
+/* ==========================================
+   🔥 ANTI KLIK LAMA / ANTI COPAS (NATIVE APP FEEL)
+   ========================================== */
+body, .app-content, .bottom-sheet, .modal {
+    -webkit-touch-callout: none; /* Mematikan popup menu di iOS/Android */
+    -webkit-user-select: none;   /* Mematikan blok teks di Chrome/Safari/Opera */
+    -khtml-user-select: none;    /* Mematikan blok teks di Konqueror */
+    -moz-user-select: none;      /* Mematikan blok teks di Firefox */
+    -ms-user-select: none;       /* Mematikan blok teks di IE/Edge */
+    user-select: none;           /* Standar modern */
+    -webkit-tap-highlight-color: transparent; /* Menghilangkan kedip warna saat layar disentuh */
+}
+
+/* Pengecualian: Biarkan form input tetap bisa diketik & diblok */
+input, textarea, select {
+    -webkit-user-select: auto;
+    -khtml-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    user-select: auto;
+}
+
