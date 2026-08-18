@@ -100,6 +100,11 @@ async function loadPackages() {
     }
 }
 
+document.getElementById('cust-package-id')?.addEventListener('change', function(e) {
+    let pkg = globalPackages.find(p => p.id === e.target.value);
+    if(pkg) document.getElementById('cust-price').value = pkg.price;
+});
+
 // MENGAMBIL PELANGGAN
 async function loadCustomers() {
     let { data, error } = await db.from('customers').select('*, packages(ppp_profile, price)').order('created_at', { ascending: false });
@@ -281,36 +286,6 @@ function renderInvoiceList() {
     document.getElementById('count-today').innerText = countToday;
 }
 
-// 🚀 FUNGSI TARIK DATA DARI API MIKROTIK
-async function fetchMikrotikStatus(pppoe_username) {
-    try {
-        let response = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-            body: JSON.stringify({ pppoe_username: pppoe_username, action: 'STATUS' })
-        });
-        
-        let result = await response.json();
-        
-        if (result && !result.error) {
-            document.getElementById('det-uptime').innerText = result.uptime || 'Offline';
-            document.getElementById('det-remote').innerText = result.remote_address || '-';
-            document.getElementById('det-logout').innerText = result.last_logout || '-';
-            document.getElementById('det-uptime').style.color = result.uptime ? 'var(--success)' : 'var(--danger)';
-        } else {
-            document.getElementById('det-uptime').innerText = 'Offline / Data Tidak Ditemukan';
-            document.getElementById('det-uptime').style.color = 'var(--danger)';
-            document.getElementById('det-remote').innerText = '-';
-            document.getElementById('det-logout').innerText = '-';
-        }
-    } catch(e) {
-        document.getElementById('det-uptime').innerText = 'Gagal Konek ke Router API';
-        document.getElementById('det-uptime').style.color = 'var(--danger)';
-        document.getElementById('det-remote').innerText = '-';
-        document.getElementById('det-logout').innerText = '-';
-    }
-}
-
 // OPEN BOTTOM SHEET DETAIL
 function openDetail(id) {
     activeCust = globalCustomers.find(c => String(c.id) === String(id));
@@ -321,7 +296,6 @@ function openDetail(id) {
     let packName = activeCust.packages?.ppp_profile || '-';
     let packPrice = getCustPrice(activeCust);
     
-    // Cek Pembayaran Bulan Ini
     let d = new Date();
     let tahunBulanStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     let hasPaid = globalPayments.some(p => p.customer_id === activeCust.id && String(p.billing_period).includes(tahunBulanStr));
@@ -339,17 +313,6 @@ function openDetail(id) {
     document.getElementById('det-pack').innerText = packName;
     document.getElementById('det-price').innerText = formatRp(packPrice);
 
-    // 🚀 TAMPILKAN LOADING SEBELUM DATA MIKROTIK MASUK
-    document.getElementById('det-uptime').innerText = 'Memuat dari Router...';
-    document.getElementById('det-uptime').style.color = 'var(--text-muted)';
-    document.getElementById('det-remote').innerText = 'Memuat...';
-    document.getElementById('det-logout').innerText = 'Memuat...';
-    
-    // 🚀 JALANKAN PEMANGGILAN API MIKROTIK
-    if(activeCust.pppoe_username) {
-        fetchMikrotikStatus(activeCust.pppoe_username);
-    }
-
     let btnAct = document.getElementById('btn-det-action');
     if(isIso) {
         btnAct.innerText = "ACTIVATE INTERNET";
@@ -361,12 +324,14 @@ function openDetail(id) {
         btnAct.onclick = () => eksekusiMikrotik(activeCust.id, activeCust.pppoe_username, true);
     }
 
-    // LOGIKA SEMBUNYIKAN TOMBOL BAYAR
+    // LOGIKA TAMPILAN TOMBOL (BATAL LUNAS vs BAYAR LUNAS)
     if (hasPaid) {
         document.getElementById('btn-pay-lunas').style.display = 'none'; 
+        document.getElementById('btn-batal-lunas').style.display = 'block'; 
         document.getElementById('preview-invoice').innerText = "✅ Tagihan bulan ini sudah dilunasi. Tidak perlu ditagih.";
     } else {
         document.getElementById('btn-pay-lunas').style.display = 'block'; 
+        document.getElementById('btn-batal-lunas').style.display = 'none'; 
         
         let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
         let invNo = "INV-" + new Date().getFullYear() + String(new Date().getMonth()+1).padStart(2,'0') + "-" + String(activeCust.customer_code).replace('CUST-','');
@@ -596,6 +561,42 @@ async function prosesPembayaran() {
         alert("❌ GAGAL MEMBAYAR!\nDetail Error: " + err.message); 
     } finally {
         btn.innerText = "CONFIRM PAYMENT";
+        btn.disabled = false;
+    }
+}
+
+// 🚀 FUNGSI BARU: BATALKAN LUNAS (TARIK KEMBALI PEMBAYARAN)
+async function batalkanPembayaran() {
+    if(!activeCust) return;
+    let confirmCancel = confirm("⚠️ Apakah bos yakin ingin MEMBATALKAN status lunas pelanggan ini?\n\nData pembayaran bulan ini akan dihapus permanen, dan status akan kembali menjadi Belum Bayar.");
+    if(!confirmCancel) return;
+
+    let btn = document.getElementById('btn-batal-lunas');
+    btn.innerText = "MEMBATALKAN...";
+    btn.disabled = true;
+
+    try {
+        let d = new Date();
+        let billingPeriod = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+
+        const { error } = await db.from('payments')
+            .delete()
+            .eq('customer_id', activeCust.id)
+            .eq('billing_period', billingPeriod);
+        
+        if (error) throw error;
+
+        alert("✅ Status Lunas berhasil dibatalkan. Pelanggan sekarang Belum Bayar.");
+        
+        await initData(); // Refresh Data Dashboard & Customers
+        activeCust = globalCustomers.find(c => String(c.id) === String(activeCust.id));
+        if(activeCust) {
+            openDetail(activeCust.id); // Buka ulang layarnya biar tombolnya kembali jadi "Bayar Lunas"
+        }
+    } catch(err) {
+        alert("❌ Gagal membatalkan: " + err.message);
+    } finally {
+        btn.innerText = "❌ Batal Lunas";
         btn.disabled = false;
     }
 }
