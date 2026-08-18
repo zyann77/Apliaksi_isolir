@@ -127,7 +127,7 @@
     </div>
 
     <script>
-        // KREDENSIAL BARU BOS SUDAH DIPASANG DI SINI
+        // KREDENSIAL BARU BOS
         var SUPABASE_URL = 'https://vljvulbjxhuysesronog.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsanZ1bGJqeGh1eXNlc3Jvbm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMjgyOTcsImV4cCI6MjEwMjYwNDI5N30.yPq1kySc9iPuOdS_eCWGRc60gUoklNqc2YRLQ7ILCIk';
         if (typeof window.supabaseClient === 'undefined') { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
@@ -189,7 +189,7 @@
 
             try {
                 alert("Sedang menghubungi MikroTik bos... Mohon tunggu.");
-                // Fetch URL di bawah ini sudah saya buat otomatis mengikuti SUPABASE_URL yang baru di atas
+                // Fetch otomatis mengikuti URL Supabase yang baru
                 const response = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
