@@ -3,156 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NET//ISOLATOR</title>
+    <title>NET//CONTROL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
     
-    <!-- Link CSS -->
-    <link rel="stylesheet" href="./css/style.css">
-    
-    <!-- Supabase -->
+    <!-- 1. Load Library Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Scanline Overlay -->
-    <div class="scanline"></div>
 
-    <!-- Splash Screen -->
-    <div id="splash" class="view active">
-        <div class="terminal-text" id="splash-terminal"></div>
-        <div class="brand-center hidden" id="splash-brand">
-            <h1 class="neon-title">NET//ISOLATOR</h1>
-            <p class="subtitle">MIKROTIK CUSTOMER CONTROL</p>
+    <!-- AUTH SCREEN -->
+    <div id="login-screen" class="screen active">
+        <div class="login-box">
+            <h1 class="logo">NET<span>//</span>CONTROL</h1>
+            <p class="subtitle">Admin Management System</p>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit" class="btn-primary">LOGIN</button>
+            </form>
+            <div class="footer-text">Created by Iyann</div>
         </div>
     </div>
 
-    <!-- Login Screen -->
-    <div id="login-view" class="view hidden">
-        <div class="login-box cyber-card">
-            <h2 class="neon-title">SECURE ACCESS</h2>
-            <div class="input-group">
-                <label>USERNAME</label>
-                <div class="input-wrapper">
-                    <span>></span>
-                    <input type="text" id="login-user" placeholder="__________________">
-                </div>
-            </div>
-            <div class="input-group">
-                <label>PASSWORD</label>
-                <div class="input-wrapper">
-                    <span>></span>
-                    <input type="password" id="login-pass" placeholder="__________________">
-                </div>
-            </div>
-            <button class="cyber-btn" onclick="app.login()">[ ACCESS SYSTEM ]</button>
-            <div id="login-status" class="terminal-font mt-4">SYSTEM: WAITING FOR AUTHENTICATION...</div>
-        </div>
-    </div>
-
-    <!-- Main Application -->
-    <div id="main-app" class="view hidden">
+    <!-- MAIN APP SCREEN -->
+    <div id="app-screen" class="screen">
         <header class="app-header">
-            <div class="brand">
-                <h1>NET//ISOLATOR</h1>
-                <div class="status-indicator">
-                    <span class="pulse-dot"></span> SYSTEM ONLINE
-                </div>
-            </div>
+            <h2 id="page-title">Dashboard</h2>
+            <div class="user-avatar" id="btn-logout">OUT</div>
         </header>
 
-        <!-- BAGIAN INI YANG SEMPAT HILANG -->
-        <main class="app-content"> 
-            
-            <!-- Dashboard View -->
-            <section id="dashboard" class="page active">
+        <main class="app-content">
+            <!-- VIEW: DASHBOARD -->
+            <section id="view-dashboard" class="view active">
                 <div class="stats-grid">
-                    <div class="stat-card cyber-card">
-                        <div class="stat-label">TOTAL CLIENT</div>
-                        <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-card">
+                        <span class="stat-label">TOTAL PELANGGAN</span>
+                        <h3 id="stat-total">0</h3>
                     </div>
-                </div>
-                <div class="terminal-monitor cyber-card mt-4">
-                    <div class="terminal-header">SYSTEM LOG</div>
-                    <div class="terminal-body" id="system-log"></div>
-                </div>
-                
-                <!-- Tombol Pintasan ke Form Tambah -->
-                <button class="cyber-btn mt-4" onclick="app.navigate('add-client')">[ + NEW CLIENT ]</button>
-            </section>
-
-            <!-- Form Tambah Pelanggan -->
-            <section id="add-client" class="page hidden">
-                <div class="cyber-card">
-                    <div class="terminal-header mb-4">
-                        <span class="pulse-dot"></span> SYSTEM // NEW_CLIENT_ENTRY
+                    <div class="stat-card success">
+                        <span class="stat-label">AKTIF</span>
+                        <h3 id="stat-active">0</h3>
                     </div>
-                    
-                    <form id="form-add-client" onsubmit="customers.save(event)">
-                        
-                        <div class="input-group">
-                            <label>NAMA PELANGGAN</label>
-                            <div class="input-wrapper">
-                                <span class="text-neon">></span>
-                                <input type="text" id="input-nama" placeholder="ENTER NAME..." required autocomplete="off">
-                            </div>
-                        </div>
-
-                        <div class="input-group">
-                            <label>PPP SECRET (USERNAME)</label>
-                            <div class="input-wrapper">
-                                <span class="text-neon">></span>
-                                <input type="text" id="input-secret" placeholder="PPPOE USERNAME..." required autocomplete="off">
-                            </div>
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>PPP PASSWORD</label>
-                            <div class="input-wrapper">
-                                <span class="text-neon">></span>
-                                <input type="password" id="input-password" placeholder="••••••••" required>
-                                <button type="button" class="btn-icon" onclick="customers.togglePassword()">👁</button>
-                            </div>
-                        </div>
-
-                        <div class="input-group">
-                            <label>TANGGAL REGISTRASI</label>
-                            <div class="input-wrapper">
-                                <span class="text-neon">></span>
-                                <input type="date" id="input-reg-date" required>
-                            </div>
-                        </div>
-
-                        <div class="input-group">
-                            <label>TANGGAL ISOLIR (1 - 31)</label>
-                            <div class="input-wrapper">
-                                <span class="text-neon">></span>
-                                <input type="number" id="input-iso-date" min="1" max="31" placeholder="DAY OF MONTH..." required>
-                            </div>
-                            <small class="terminal-font text-dim mt-1 d-block">Sistem otomatis isolir pada tanggal ini jika belum lunas.</small>
-                        </div>
-
-                        <button type="submit" class="cyber-btn mt-4 w-100" id="btn-save-client">
-                            [ EXECUTE: SAVE_CLIENT ]
-                        </button>
-                    </form>
-
-                    <div id="save-status-log" class="terminal-font mt-4 text-neon hidden"></div>
                 </div>
             </section>
 
+            <!-- VIEW: PELANGGAN -->
+            <section id="view-customers" class="view">
+                <div class="action-bar">
+                    <input type="text" id="search-customer" placeholder="Cari pelanggan...">
+                    <button id="btn-add-customer" class="btn-primary">+ Tambah</button>
+                </div>
+                <div id="customer-list" class="list-container">
+                    Memuat data...
+                </div>
+            </section>
         </main>
-
-        <footer class="app-footer">
-            <p>Created by Iyann</p>
-        </footer>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="app.navigate('dashboard')">⌂ HOME</button>
-            <button class="nav-item" onclick="app.navigate('add-client')">◉ CLIENT</button>
-            <button class="nav-item text-neon" onclick="app.navigate('isolation')">⚡ ISOLATION</button>
+            <button class="nav-item active" data-target="view-dashboard">
+                <span class="label">Dashboard</span>
+            </button>
+            <button class="nav-item" data-target="view-customers">
+                <span class="label">Pelanggan</span>
+            </button>
         </nav>
     </div>
 
-    <!-- Scripts -->
-    <script src="./js/app.js"></script>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Notifikasi</div>
+
+    <!-- 2. Inisialisasi Supabase dan Logic Aplikasi -->
+    <script>
+        // INISIALISASI SUPABASE DENGAN KEY ANDA
+        const SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // LOGIC LOGIN SEMENTARA (Bypass untuk testing)
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('app-screen').classList.add('active');
+            loadCustomers(); // Load data pelanggan setelah login
+        });
+
+        // LOGIC NAVIGASI BAWAH
+        document.querySelectorAll('.nav-item').forEach(button => {
+            button.addEventListener('click', (e) => {
+                document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+                
+                const target = button.closest('.nav-item');
+                target.classList.add('active');
+                document.getElementById(target.dataset.target).classList.add('active');
+                document.getElementById('page-title').innerText = target.querySelector('.label').innerText;
+            });
+        });
+
+        // LOGIC AMBIL DATA PELANGGAN DARI SUPABASE
+        async function loadCustomers() {
+            const list = document.getElementById('customer-list');
+            list.innerHTML = 'Memuat data dari Supabase...';
+
+            const { data: customers, error } = await supabase
+                .from('customers')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error(error);
+                list.innerHTML = `<div style="color:red; font-size:12px;">Error: ${error.message} <br>(Pastikan Anda sudah menjalankan SQL Schema di Supabase)</div>`;
+                return;
+            }
+
+            if (customers.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:20px; font-size:14px;">Belum ada data pelanggan.</div>';
+                return;
+            }
+
+            list.innerHTML = '';
+            customers.forEach(cust => {
+                let statusColor = cust.isolation_status === 'ISOLATED' ? 'red' : 'green';
+                list.innerHTML += `
+                    <div class="customer-card" style="background:#fff; padding:15px; border-radius:8px; margin-bottom:10px; border:1px solid #ddd; display:flex; justify-content:space-between;">
+                        <div>
+                            <h4 style="margin:0 0 5px 0;">${cust.name}</h4>
+                            <small style="color:gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
+                            <small style="color:${statusColor}; font-weight:bold;">● ${cust.isolation_status}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Update Dashboard Stats
+            document.getElementById('stat-total').innerText = customers.length;
+        }
+    </script>
 </body>
 </html>
