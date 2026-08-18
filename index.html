@@ -26,7 +26,6 @@
 
     <!-- ================= APP SCREEN ================= -->
     <div id="app-screen" class="screen">
-        
         <main class="app-content">
             
             <!-- VIEW: HOME DASHBOARD -->
@@ -121,7 +120,6 @@
                     <div class="data-row"><span class="data-label">Uptime</span><span class="data-value" style="color:var(--success);">Connected (API Ready)</span></div>
                 </div>
             </div>
-
         </main>
 
         <div class="fab-menu" id="fab-main" onclick="toggleFab()">+</div>
@@ -130,7 +128,6 @@
             <div class="fab-opt" onclick="switchView('view-billing', document.querySelectorAll('.nav-item')[2])"><span>💰 Menu Penagihan</span></div>
         </div>
 
-        <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="switchView('view-dashboard', this)"><div class="nav-icon">⚲</div>Home</button>
             <button class="nav-item" onclick="switchView('view-customers', this)"><div class="nav-icon">👥</div>Customers</button>
@@ -143,6 +140,7 @@
     <!-- ================= CUSTOMER DETAIL (BOTTOM SHEET) ================= -->
     <div id="detail-sheet" class="bottom-sheet-overlay">
         <div class="bottom-sheet">
+            
             <div class="sheet-header" style="flex-direction:column; gap:15px;">
                 <div style="display:flex; justify-content:space-between; width:100%;">
                     <button class="btn-back" onclick="closeDetailScreen()">← Kembali</button>
@@ -157,45 +155,60 @@
                 </div>
             </div>
 
+            <!-- SHEET TABS -->
+            <div class="sheet-tabs">
+                <div class="s-tab active" onclick="switchSheetTab('pane-info', this)">INFO PROFILE</div>
+                <div class="s-tab" onclick="switchSheetTab('pane-invoice', this)">WA INVOICE & NOTA</div>
+            </div>
+
             <div class="sheet-content">
-                <div class="section-title">CONTACT</div>
-                <div class="sheet-card">
-                    <div class="data-row">
-                        <div>
-                            <span class="data-label">WhatsApp</span>
-                            <span class="data-value" id="det-wa" style="display:block;">0812...</span>
+                
+                <!-- SLIDE 1: INFO PROFILE -->
+                <div id="pane-info" class="s-pane active">
+                    <div class="sheet-card">
+                        <div class="data-row"><span class="data-label">Secret (PPPoE)</span><span class="data-value" id="det-pppoe">-</span></div>
+                        <div class="data-row"><span class="data-label">Tanggal Registrasi</span><span class="data-value" id="det-reg">-</span></div>
+                        <div class="data-row"><span class="data-label">Tanggal Isolir</span><span class="data-value" style="color:var(--danger); font-weight:800;">Tgl <span id="det-due">0</span></span></div>
+                        <div class="data-row" style="align-items:flex-start; margin-top:10px;">
+                            <span class="data-label" style="min-width:80px;">Alamat</span>
+                            <span class="data-value" id="det-address" style="text-align:right; font-size:12px;">-</span>
                         </div>
-                        <a id="det-wa-link" target="_blank" style="text-decoration:none;">
-                            <div class="btn-sm" style="background:#25D366; color:white;">WhatsApp</div>
-                        </a>
+                    </div>
+
+                    <div class="sheet-card">
+                        <div class="data-row"><span class="data-label">Paket Internet</span><span class="data-value" id="det-pack" style="font-weight:800;">-</span></div>
+                        <div class="data-row"><span class="data-label">Total Biaya</span><span class="data-value" id="det-price" style="font-size:18px; font-weight:800; color:var(--navy);">Rp 0</span></div>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-primary" id="btn-det-action" style="flex:1;">ACTIVATE / ISOLIR</button>
                     </div>
                 </div>
 
-                <div class="section-title">INTERNET</div>
-                <div class="sheet-card">
-                    <div class="data-row"><span class="data-label">Paket</span><span class="data-value" id="det-pack" style="font-weight:700;">-</span></div>
-                    <div class="data-row"><span class="data-label">Username PPPoE</span><span class="data-value" id="det-pppoe">-</span></div>
-                    <div class="data-row"><span class="data-label">Password PPPoE</span><span class="data-value">***</span></div>
-                </div>
-
-                <div class="section-title">BILLING</div>
-                <div class="sheet-card">
-                    <div class="data-row">
-                        <div>
-                            <span class="data-value" id="det-price" style="font-size:18px; font-weight:800; color:var(--navy);">Rp 0</span>
-                            <span class="data-label" style="display:block;">per bulan</span>
+                <!-- SLIDE 2: WA INVOICE & NOTA -->
+                <div id="pane-invoice" class="s-pane">
+                    
+                    <div class="section-title">KIRIM TAGIHAN (BELUM BAYAR)</div>
+                    <div class="sheet-card" style="padding:15px; background:var(--bg-light); border:1px solid #e2e8f0;">
+                        <div class="chat-bubble">
+                            <p id="preview-invoice" style="white-space: pre-wrap; font-size:13px; line-height:1.5;">Memuat template...</p>
                         </div>
-                        <div style="text-align:right;">
-                            <span class="data-label" style="display:block;">Jatuh tempo</span>
-                            <span class="data-value">Tgl <span id="det-due">0</span></span>
+                        <button class="btn-primary" style="margin-top:15px; background:#25D366; box-shadow:0 5px 15px rgba(37, 211, 102, 0.3);" onclick="kirimInvoiceWA()">💬 Kirim Tagihan ke WA</button>
+                    </div>
+
+                    <div class="section-title" style="margin-top:25px;">KIRIM NOTA (SUDAH BAYAR)</div>
+                    <div class="sheet-card" style="padding:15px; background:var(--bg-light); border:1px solid #e2e8f0;">
+                        <div class="chat-bubble">
+                            <p id="preview-nota" style="white-space: pre-wrap; font-size:13px; line-height:1.5;">Memuat template...</p>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:15px;">
+                            <button class="btn-primary" style="flex:1; background:var(--navy);" onclick="bukaModalBayar()">💰 Bayar Lunas</button>
+                            <button class="btn-primary" style="flex:1; background:#25D366; box-shadow:0 5px 15px rgba(37, 211, 102, 0.3);" onclick="kirimNotaWA()">💬 Kirim Nota</button>
                         </div>
                     </div>
+
                 </div>
 
-                <div style="margin-top:25px; display:flex; gap:10px;">
-                    <button class="btn-primary" id="btn-det-action" style="flex:1;">ACTIVATE</button>
-                    <button class="btn-primary" id="btn-det-pay" style="flex:1; background:var(--success);" onclick="bukaModalBayar()">BAYAR</button>
-                </div>
             </div>
         </div>
     </div>
@@ -213,19 +226,20 @@
                 <input type="hidden" id="form-id">
                 
                 <div class="section-title">01. CONTACT</div>
-                <div class="input-group"><input type="text" id="cust-name" placeholder="Nama Lengkap" required></div>
+                <div class="input-group"><input type="text" id="cust-name" placeholder="Nama Pelanggan" required></div>
                 <div class="input-group"><input type="number" id="cust-phone" placeholder="WhatsApp (Awali 62)" required></div>
+                <div class="input-group"><input type="text" id="cust-address" placeholder="Alamat Lengkap"></div>
                 
                 <div class="section-title">02. INTERNET</div>
-                <div class="input-group"><input type="text" id="cust-package" placeholder="Nama Paket (cth: HOME 20)" required></div>
-                <div class="input-group"><input type="text" id="cust-user" placeholder="Username PPPoE" required></div>
+                <div class="input-group"><input type="text" id="cust-package" placeholder="Paket (cth: HOME 20)" required></div>
+                <div class="input-group"><input type="text" id="cust-user" placeholder="Secret (User PPPoE)" required></div>
                 <div class="input-group"><input type="text" id="cust-pass" placeholder="Password PPPoE" required></div>
                 
                 <div class="section-title">03. BILLING</div>
-                <div class="input-group"><input type="number" id="cust-price" placeholder="Harga Bulanan (cth: 150000)" required></div>
-                <div class="input-group"><input type="number" id="cust-due" placeholder="Tanggal Jatuh Tempo (1-31)" min="1" max="31" required></div>
+                <div class="input-group"><input type="number" id="cust-price" placeholder="Biaya (cth: 150000)" required></div>
+                <div class="input-group"><input type="number" id="cust-due" placeholder="Tgl Tagihan/Isolir (1-31)" min="1" max="31" required></div>
                 
-                <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top:15px;">SIMPAN CUSTOMER</button>
+                <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top:15px;">SIMPAN DATA</button>
             </form>
         </div>
     </div>
@@ -255,21 +269,6 @@
                 
                 <button type="submit" class="btn-primary" style="background:var(--navy);">CONFIRM PAYMENT</button>
             </form>
-        </div>
-    </div>
-
-    <!-- Success Receipt Modal -->
-    <div id="success-anim" class="modal">
-        <div class="modal-content" style="padding-top:40px; text-align:center;">
-            <div style="width:80px; height:80px; background:var(--success); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:40px; margin:0 auto 15px auto;">✓</div>
-            <h2 style="color:var(--navy); font-weight:800; margin-bottom:5px;">Payment Successful</h2>
-            <p style="color:var(--text-muted); font-size:14px; margin-bottom:25px;">Pelunasan berhasil dicatat di sistem.</p>
-            
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <button class="btn-primary" id="btn-wa-receipt" style="background:#25D366; flex:1;">💬 Kirim WA</button>
-                <button class="btn-primary" onclick="printReceipt()" style="background:var(--navy); flex:1;">🖨️ Print Struk</button>
-            </div>
-            <button class="btn-back" style="width:100%; justify-content:center; padding:15px; color:var(--text-muted);" onclick="closeModal('success-anim')">Tutup</button>
         </div>
     </div>
 
