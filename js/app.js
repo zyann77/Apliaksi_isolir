@@ -145,18 +145,13 @@ function renderCustomerList(data) {
 function calcDashboard() {
     let tAct = 0, tIso = 0, outstanding = 0, unpaidCount = 0;
     
-    // Tarik Waktu Saat Ini
     let d = new Date();
-    // Bikin string patokan HANYA BULAN & TAHUN (contoh "2026-08") biar 100% cocok!
     let tahunBulanStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    let hariIniStr = `${tahunBulanStr}-${String(d.getDate()).padStart(2,'0')}`; // "2026-08-18"
+    let hariIniStr = `${tahunBulanStr}-${String(d.getDate()).padStart(2,'0')}`;
     
     globalCustomers.forEach(c => {
         c.isolation_status === 'ISOLATED' ? tIso++ : tAct++;
-        
-        // Mengecek apakah di tabel payments ada text yang MENGANDUNG "2026-08" untuk pelanggan ini
         let hasPaid = globalPayments.some(p => p.customer_id === c.id && String(p.billing_period).includes(tahunBulanStr));
-        
         if(!hasPaid) { 
             outstanding += (Number(c.packages?.price) || 0); 
             unpaidCount++; 
@@ -169,15 +164,8 @@ function calcDashboard() {
         let amt = parseFloat(p.amount) || 0;
         let tglBayar = p.payment_date || p.created_at || "";
         
-        // Kalau tanggal bayar mengandung "2026-08" (Berarti bayar bulan ini)
-        if (tglBayar.includes(tahunBulanStr)) {
-            income += amt;
-        }
-        
-        // Kalau tanggal bayar mengandung "2026-08-18" (Berarti bayar HARI INI)
-        if (tglBayar.includes(hariIniStr)) {
-            incomeToday += amt;
-        }
+        if (tglBayar.includes(tahunBulanStr)) income += amt;
+        if (tglBayar.includes(hariIniStr)) incomeToday += amt;
     });
 
     document.getElementById('dash-income').innerText = formatRp(income);
@@ -217,7 +205,6 @@ function renderInvoiceList() {
     let countToday = 0;
 
     globalCustomers.forEach(cust => {
-        // Cek lagi pencocokannya pakai includes() supaya aman
         let hasPaid = globalPayments.some(p => p.customer_id === cust.id && String(p.billing_period).includes(tahunBulanStr));
         if(hasPaid) return; 
         
@@ -386,49 +373,66 @@ function bukaModalBayar() {
     openModal('modal-pay');
 }
 
-document.getElementById('payment-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    let id = document.getElementById('pay-id').value;
-    let amt = parseInt(document.getElementById('pay-amount').value);
-    let method = document.getElementById('pay-method').value;
-    let cust = globalCustomers.find(c => String(c.id) === String(id));
-    
-    let d = new Date();
-    // BIKIN TANGGAL YANG 100% AMAN (Contoh "2026-08-01")
-    let billingPeriod = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+// 🚀 FUNGSI BARU: PROSES PEMBAYARAN ANTI MENTAL (ONCLICK DIRECT)
+async function prosesPembayaran() {
+    let btn = document.getElementById('btn-confirm-pay');
+    btn.innerText = "MEMPROSES...";
+    btn.disabled = true;
 
     try {
+        let id = document.getElementById('pay-id').value;
+        let amt = parseInt(document.getElementById('pay-amount').value);
+        let method = document.getElementById('pay-method').value;
+        let cust = globalCustomers.find(c => String(c.id) === String(id));
+        
+        let d = new Date();
+        let billingPeriod = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+
+        // 1. Simpan Pembayaran ke Database
         const { error } = await db.from('payments').insert([{ 
             customer_id: id, 
             amount: amt, 
             payment_method: method,
             billing_period: billingPeriod
         }]);
-        if (error) throw error;
         
+        if (error) throw error; // Kalau database gagal, akan langsung lempar ke Catch
+        
+        // 2. Buka Isolir (Jika sedang terisolir)
         if(cust && cust.isolation_status === 'ISOLATED') {
-            await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-                body: JSON.stringify({ pppoe_username: cust.pppoe_username, action: 'NORMAL' })
-            });
-            await db.from('customers').update({ isolation_status: 'NORMAL' }).eq('id', id);
+            try {
+                await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+                    body: JSON.stringify({ pppoe_username: cust.pppoe_username, action: 'NORMAL' })
+                });
+                await db.from('customers').update({ isolation_status: 'NORMAL' }).eq('id', id);
+            } catch(e) {
+                console.warn("Mikrotik update skipped: ", e);
+            }
         }
 
         closeModal('modal-pay');
-        alert("Pembayaran berhasil dicatat!");
         
+        // PESAN SUKSES!
+        alert("💰 SUKSES! Pembayaran berhasil tercatat di sistem.");
+        
+        // Refresh Data dan Tampilan
         await initData();
         activeCust = globalCustomers.find(c => String(c.id) === String(id));
         if(activeCust) {
             openDetail(id);
+            // Otomatis buka Tab Nota WhatsApp
             setTimeout(() => { document.querySelectorAll('.s-tab')[1].click(); }, 300);
         }
 
     } catch(err) { 
-        alert("Gagal Membayar: " + err.message); 
+        alert("❌ GAGAL MEMBAYAR!\nDetail Error: " + err.message); 
+    } finally {
+        btn.innerText = "CONFIRM PAYMENT";
+        btn.disabled = false;
     }
-});
+}
 
 async function eksekusiMikrotik(customerId, pppoeUser, makeIsolated) {
     let actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
