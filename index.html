@@ -9,21 +9,22 @@
     <style>
         /* === TEMA PREMIUM: NAVY, WHITE, CYAN === */
         :root { 
-            --navy-dark: #0A192F; --navy-light: #112240; --cyan-accent: #64FFDA; --cyan-hover: #4CD8B5;
-            --bg-body: #F4F7FE; --card-bg: #FFFFFF; --text-main: #2B3674; --text-muted: #A3AED0; 
-            --danger: #FF5B5B; --success: #05CD99; --warning: #FFCE20;
-            --shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.08); --border-rad: 16px;
+            --navy-dark: #0f172a; --navy-light: #1e293b; --cyan-accent: #38bdf8; --cyan-hover: #0ea5e9;
+            --bg-body: #f1f5f9; --card-bg: #FFFFFF; --text-main: #334155; --text-muted: #94a3b8; 
+            --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+            --border-rad: 12px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg-body); color: var(--text-main); -webkit-font-smoothing: antialiased; }
         
-        .screen { display: none; height: 100vh; width: 100vw; overflow: hidden; flex-direction: column; animation: fadeIn 0.4s ease-in-out;}
+        .screen { display: none; height: 100vh; width: 100vw; overflow: hidden; flex-direction: column; animation: fadeIn 0.3s ease-in-out; position: fixed; top:0; left:0; background: var(--bg-body); z-index: 1;}
         .screen.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
         /* === LOGIN SCREEN === */
-        #login-screen { background: var(--navy-dark); color: white; justify-content: center; align-items: center; }
+        #login-screen { background: var(--navy-dark); color: white; justify-content: center; align-items: center; z-index: 9999;}
         .login-box { background: var(--navy-light); padding: 40px 30px; border-radius: var(--border-rad); box-shadow: 0 20px 40px rgba(0,0,0,0.4); width: 90%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
         .logo { font-weight: 800; font-size: 28px; letter-spacing: 1px; color: white; margin-bottom: 5px; }
         .logo span { color: var(--cyan-accent); }
@@ -31,87 +32,103 @@
         .login-box input { width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 14px; outline: none; transition: 0.3s;}
         .login-box input:focus { border-color: var(--cyan-accent); }
         .btn-primary { background: var(--cyan-accent); color: var(--navy-dark); border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.3s; margin-top: 10px;}
-        .btn-primary:hover { background: var(--cyan-hover); transform: translateY(-2px); }
 
         /* === HEADER & LAYOUT === */
-        .app-header { background: var(--navy-dark); color: white; padding: 25px 20px 40px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; }
-        .greeting h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-        .greeting p { font-size: 12px; color: var(--text-muted); }
-        .btn-logout { background: rgba(255, 255, 255, 0.1); color: white; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; backdrop-filter: blur(5px); }
+        .app-header { background: var(--navy-dark); color: white; padding: 25px 20px 40px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-shrink: 0;}
+        .greeting h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; color: white;}
+        .greeting p { font-size: 12px; color: var(--cyan-accent); }
+        .btn-logout { background: rgba(255, 255, 255, 0.1); color: white; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; }
         
         .app-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; margin-top: -25px; z-index: 11; position: relative;}
         .view { display: none; animation: fadeIn 0.3s ease-in-out; }
         .view.active { display: block; }
 
         /* === DASHBOARD CARDS === */
-        .finance-card { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-light) 100%); color: white; padding: 20px; border-radius: var(--border-rad); box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid rgba(100, 255, 218, 0.2); }
-        .finance-card span { font-size: 12px; color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 5px; }
-        .finance-card h1 { font-size: 32px; color: var(--cyan-accent); font-weight: 800; letter-spacing: -0.5px; }
+        .finance-card { background: linear-gradient(135deg, var(--cyan-hover) 0%, var(--navy-light) 100%); color: white; padding: 20px; border-radius: var(--border-rad); box-shadow: var(--shadow); margin-bottom: 20px; }
+        .finance-card span { font-size: 12px; font-weight: 500; display: block; margin-bottom: 5px; opacity: 0.9;}
+        .finance-card h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 5px;}
         
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px;}
         .stat-card { background: var(--card-bg); padding: 18px; border-radius: var(--border-rad); box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;}
-        .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .stat-card h3 { font-size: 26px; font-weight: 800; color: var(--text-main); }
+        .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+        .stat-card h3 { font-size: 24px; font-weight: 800; color: var(--navy-dark); }
         .stat-card.success h3 { color: var(--success); }
         .stat-card.danger h3 { color: var(--danger); }
-        .stat-card.warning h3 { color: var(--warning); }
-
-        /* === QUICK ACTIONS === */
-        .section-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); }
-        .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .quick-btn { background: var(--card-bg); border: none; padding: 15px 5px; border-radius: 12px; box-shadow: var(--shadow); color: var(--navy-dark); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.2s;}
-        .quick-btn:active { transform: scale(0.95); background: var(--bg-body); }
-        .quick-icon { font-size: 20px; background: rgba(100, 255, 218, 0.15); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
 
         /* === LIST CARDS === */
+        .section-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--navy-dark); }
         .search-bar { background: var(--card-bg); padding: 15px; border-radius: 12px; border: none; box-shadow: var(--shadow); width: 100%; font-size: 14px; margin-bottom: 15px; outline: none; }
-        .data-card { background: var(--card-bg); padding: 20px; border-radius: var(--border-rad); margin-bottom: 15px; box-shadow: var(--shadow); position: relative; overflow: hidden; border-left: 4px solid var(--success);}
+        .data-card { background: var(--card-bg); padding: 18px; border-radius: var(--border-rad); margin-bottom: 12px; box-shadow: var(--shadow); border-left: 4px solid var(--success); cursor: pointer; transition: 0.2s;}
+        .data-card:active { transform: scale(0.98); }
         .data-card.isolated { border-left-color: var(--danger); }
-        .data-card.payment { border-left-color: var(--cyan-hover); }
         
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .card-title { font-size: 16px; font-weight: 700; color: var(--navy-dark); }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
-        .badge.active { background: rgba(5, 205, 153, 0.1); color: var(--success); }
-        .badge.isolated { background: rgba(255, 91, 91, 0.1); color: var(--danger); }
-        .badge.pay { background: rgba(100, 255, 218, 0.1); color: var(--cyan-hover); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .card-title { font-size: 15px; font-weight: 700; color: var(--navy-dark); }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        .badge.active { background: #dcfce7; color: var(--success); }
+        .badge.isolated { background: #fee2e2; color: var(--danger); }
         
-        .card-details p { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500;}
+        .card-details p { font-size: 12px; color: var(--text-muted); margin-bottom: 4px;}
         .card-details span { color: var(--text-main); font-weight: 600; }
-        
-        .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; border-top: 1px solid var(--bg-body); padding-top: 15px;}
-        .btn-action { padding: 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; text-align: center; display: flex; justify-content: center; align-items: center; gap: 5px; transition: 0.2s;}
-        .btn-wa { background: #25D366; color: white; }
-        .btn-isolir { background: rgba(255, 91, 91, 0.1); color: var(--danger); }
-        .btn-buka { background: rgba(5, 205, 153, 0.1); color: var(--success); }
-        .btn-hapus { background: var(--bg-body); color: var(--text-muted); }
-        .btn-action:active { transform: scale(0.95); }
 
+        /* === DETAIL SCREEN (MIRRORING SCREENSHOT) === */
+        #detail-screen { background: #f8fafc; z-index: 100;}
+        .profile-header { background: var(--navy-dark); color: white; padding: 20px; padding-top: 40px; }
+        .profile-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;}
+        .btn-back { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 5px;}
+        .header-icons { display: flex; gap: 15px; font-size: 20px;}
+        
+        .profile-info { display: flex; align-items: center; gap: 15px; margin-bottom: 25px;}
+        .avatar { width: 60px; height: 60px; border-radius: 50%; background: #cbd5e1; border: 2px solid white; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: var(--navy-dark);}
+        .profile-text h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;}
+        .profile-text p { font-size: 13px; color: var(--cyan-accent); display: flex; align-items: center; gap: 5px; margin-bottom: 4px;}
+        .id-badge { background: var(--cyan-hover); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; display: inline-block;}
+        
+        .profile-tabs { display: flex; justify-content: space-between; background: white; padding: 0 10px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10;}
+        .tab-item { padding: 15px 10px; font-size: 12px; font-weight: 700; color: var(--text-muted); border-bottom: 3px solid transparent; cursor: pointer;}
+        .tab-item.active { color: var(--cyan-hover); border-bottom-color: var(--cyan-hover); }
+
+        .detail-content { padding: 15px; overflow-y: auto; flex: 1; padding-bottom: 90px;}
+        
+        .status-banner { background: var(--success); color: white; padding: 15px; border-radius: var(--border-rad); text-align: center; font-weight: 700; font-size: 14px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; gap: 5px;}
+        .status-banner.danger { background: var(--danger); }
+        .status-banner .icon { font-size: 24px; }
+
+        .detail-card { background: white; border-radius: var(--border-rad); padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); }
+        .detail-card h3 { font-size: 15px; font-weight: 700; color: var(--navy-dark); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);}
+        
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px;}
+        .data-row.col { flex-direction: column; gap: 5px; }
+        .data-label { color: var(--text-muted); font-weight: 600; font-size: 12px;}
+        .data-value { color: var(--text-main); font-weight: 500; }
+        .data-highlight { background: var(--danger); color: white; padding: 8px 12px; border-radius: 8px; font-weight: 700; display: inline-flex; align-items: center; justify-content: space-between;}
+        
+        .mikrotik-box { border: 1px solid var(--cyan-accent); border-radius: 10px; padding: 12px; margin-bottom: 15px;}
+        .mikrotik-header { display: flex; align-items: center; gap: 8px; color: var(--cyan-hover); font-weight: 700; margin-bottom: 10px; font-size: 14px;}
+        
+        .detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;}
+        .btn-action-lg { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        
         /* === BOTTOM NAVIGATION === */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 15px 10px; padding-bottom: env(safe-area-inset-bottom, 15px); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 100;}
-        .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 10px; font-weight: 600; cursor: pointer; gap: 4px; transition: 0.3s;}
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 12px 10px; padding-bottom: env(safe-area-inset-bottom, 15px); border-top: 1px solid var(--border-color); z-index: 999;}
+        .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 10px; font-weight: 600; cursor: pointer; gap: 4px;}
         .nav-item.active { color: var(--cyan-hover); }
-        .nav-item .icon { font-size: 22px; transition: 0.3s; }
-        .nav-item.active .icon { transform: translateY(-3px); }
+        .nav-item .icon { font-size: 20px; }
 
         /* === MODALS === */
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 25, 47, 0.7); backdrop-filter: blur(5px); z-index: 1000; align-items: flex-end; justify-content: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 1000; align-items: flex-end; justify-content: center; }
         .modal.active { display: flex; animation: fadeIn 0.3s; }
-        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px; position: relative; animation: slideUp 0.3s ease-out;}
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-content { background: var(--bg-body); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px; position: relative;}
         
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: -25px; background: var(--card-bg); padding: 25px 0 15px 0; z-index: 10; border-bottom: 1px solid var(--bg-body);}
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
         .modal-header h3 { font-size: 18px; font-weight: 800; color: var(--navy-dark);}
-        .close-modal { background: var(--bg-body); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; font-weight: bold; color: var(--text-muted); }
+        .close-modal { background: var(--border-color); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
         
-        .form-section { font-size: 12px; font-weight: 800; color: var(--cyan-hover); text-transform: uppercase; margin: 20px 0 10px 0; letter-spacing: 1px;}
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 12px; margin-bottom: 6px; font-weight: 600; color: var(--text-main);}
-        .form-group input, .form-group select { width: 100%; padding: 14px; background: var(--bg-body); border: 1px solid transparent; border-radius: 10px; font-size: 14px; outline: none; transition: 0.3s; font-weight: 500;}
-        .form-group input:focus, .form-group select:focus { border-color: var(--cyan-hover); background: white; box-shadow: 0 0 0 4px rgba(100, 255, 218, 0.1); }
-        .btn-save { background: var(--navy-dark); color: var(--cyan-accent); padding: 16px; border: none; width: 100%; border-radius: 12px; font-size: 14px; font-weight: 800; margin-top: 10px; cursor: pointer; letter-spacing: 0.5px;}
-
-        .credit-footer { text-align: center; padding: 10px; font-size: 10px; color: var(--text-muted); font-weight: 500; margin-bottom: 10px;}
+        .form-group label { display: block; font-size: 12px; margin-bottom: 6px; font-weight: 600;}
+        .form-group input, .form-group select { width: 100%; padding: 14px; background: white; border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px; outline: none;}
+        .btn-save { background: var(--navy-dark); color: white; padding: 15px; border: none; width: 100%; border-radius: 10px; font-size: 14px; font-weight: 700; margin-top: 10px;}
+        .floating-add { position: fixed; bottom: 80px; right: 20px; background: var(--navy-dark); color: white; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: none; z-index: 99; cursor: pointer;}
     </style>
 </head>
 <body>
@@ -123,10 +140,9 @@
             <form id="login-form">
                 <input type="text" id="username" placeholder="Owner Username" required autocomplete="off">
                 <input type="password" id="password" placeholder="Password" required autocomplete="off">
-                <button type="submit" id="btn-login" class="btn-primary">LOGIN SYSTEM</button>
+                <button type="submit" id="btn-login" class="btn-primary">LOGIN</button>
             </form>
             <p id="pesan-error" style="color: var(--danger); font-size: 12px; margin-top: 15px; display: none; font-weight: 600;">Username atau Password salah!</p>
-            <div class="credit-footer" style="margin-top: 30px; opacity: 0.5;">Created by Iyann</div>
         </div>
     </div>
 
@@ -134,22 +150,22 @@
     <div id="app-screen" class="screen">
         <header class="app-header">
             <div class="greeting">
-                <h2>Selamat Datang, Owner 👋</h2>
+                <h2>Beranda Owner</h2>
                 <p id="realtime-clock">Memuat sistem...</p>
             </div>
-            <button class="btn-logout" id="btn-logout">LOGOUT</button>
+            <button class="btn-logout" id="btn-logout">Keluar</button>
         </header>
         
         <main class="app-content">
             <!-- VIEW: DASHBOARD -->
             <section id="view-dashboard" class="view active">
                 <div class="finance-card">
-                    <span>PENDAPATAN BULAN INI</span>
+                    <span>Pendapatan Bulan Ini</span>
                     <h1 id="dashboard-income">Rp 0</h1>
-                    <span style="color: var(--cyan-accent); font-size: 10px; margin-top: 8px;">● MIKROTIK: CONNECTED</span>
+                    <span style="color: var(--cyan-hover); font-size: 11px; margin-top: 10px;">🟢 MikroTik Terhubung</span>
                 </div>
 
-                <div class="section-title">STATISTIK PELANGGAN</div>
+                <div class="section-title">Ringkasan Sistem</div>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <span class="stat-label">Total Pelanggan</span>
@@ -159,147 +175,211 @@
                         <span class="stat-label">Aktif</span>
                         <h3 id="stat-active">0</h3>
                     </div>
-                    <div class="stat-card warning">
-                        <span class="stat-label">Menunggak</span>
-                        <h3>0</h3> <!-- Disiapkan utk next update -->
-                    </div>
                     <div class="stat-card danger">
                         <span class="stat-label">Terisolir</span>
                         <h3 id="stat-isolated">0</h3>
                     </div>
                 </div>
-
-                <div class="section-title">QUICK ACTION</div>
-                <div class="quick-grid">
-                    <button class="quick-btn" onclick="openModal('modal-customer')">
-                        <div class="quick-icon">👤</div>
-                        Tambah Pelanggan
-                    </button>
-                    <button class="quick-btn" onclick="openModal('modal-payment')">
-                        <div class="quick-icon">💰</div>
-                        Input Bayar
-                    </button>
-                    <button class="quick-btn" onclick="document.querySelector('[data-target=\'view-customers\']').click()">
-                        <div class="quick-icon">🚫</div>
-                        Isolir Manual
-                    </button>
-                </div>
-                <div class="credit-footer">Created by Iyann</div>
             </section>
 
             <!-- VIEW: CUSTOMERS -->
             <section id="view-customers" class="view">
-                <div class="section-title" style="margin-bottom: 5px;">DATA PELANGGAN</div>
-                <input type="text" class="search-bar" id="search-customer" placeholder="Cari nama atau nomor WA...">
+                <div class="section-title">Daftar Pelanggan</div>
+                <input type="text" class="search-bar" id="search-customer" placeholder="Ketik nama atau nomor WA...">
                 <div id="customer-list"></div>
-            </section>
-
-            <!-- VIEW: BILLING (PAYMENTS) -->
-            <section id="view-billing" class="view">
-                <div class="section-title" style="margin-bottom: 5px;">RIWAYAT PEMBAYARAN</div>
-                <div id="payment-list"></div>
+                <button class="floating-add" onclick="openModal('modal-customer')">+</button>
             </section>
         </main>
 
         <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-target="view-dashboard">
-                <span class="icon">📊</span><span class="label">Home</span>
+                <span class="icon">🏠</span><span class="label">Home</span>
             </button>
             <button class="nav-item" data-target="view-customers">
                 <span class="icon">👥</span><span class="label">Pelanggan</span>
             </button>
-            <button class="nav-item" data-target="view-billing">
-                <span class="icon">📄</span><span class="label">Billing</span>
+            <button class="nav-item" onclick="openModal('modal-payment')">
+                <span class="icon">💳</span><span class="label">Bayar</span>
             </button>
             <button class="nav-item">
-                <span class="icon">🖥️</span><span class="label">Monitoring</span>
-            </button>
-            <button class="nav-item">
-                <span class="icon">⚙️</span><span class="label">More</span>
+                <span class="icon">⚙️</span><span class="label">Pengaturan</span>
             </button>
         </nav>
+    </div>
+
+    <!-- PROFILE DETAIL SCREEN -->
+    <div id="detail-screen" class="screen">
+        <div class="profile-header">
+            <div class="profile-nav">
+                <button class="btn-back" onclick="closeDetailScreen()">←</button>
+                <div class="header-icons">
+                    <span>🖼️</span> <span> QR</span>
+                </div>
+            </div>
+            <div style="text-align:center; font-size:12px; margin-bottom:15px; opacity:0.8;">Tambahkan Foto Rumah Mungkin ?</div>
+            
+            <div class="profile-info">
+                <div class="avatar" id="det-avatar">A</div>
+                <div class="profile-text">
+                    <h2 id="det-name">Nama Pelanggan</h2>
+                    <p>📞 <span id="det-phone">0812...</span></p>
+                    <div class="id-badge">ID pel : <span id="det-id">000000</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-tabs">
+            <div class="tab-item active">DETAIL</div>
+            <div class="tab-item">BULAN</div>
+            <div class="tab-item">BAYAR</div>
+            <div class="tab-item">H. TEKNISI</div>
+        </div>
+
+        <div class="detail-content">
+            <div id="det-status-banner" class="status-banner">
+                <span class="icon">✓</span>
+                Tidak ada Tagihan
+            </div>
+
+            <!-- Rincian Data -->
+            <div class="detail-card">
+                <h3>Rincian Data</h3>
+                <div class="data-row col">
+                    <span class="data-label">Tanggal Daftar</span>
+                    <span class="data-value" id="det-reg">01 Jan 2026</span>
+                </div>
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0;">
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div class="data-row col" style="margin:0;">
+                        <span class="data-label">Tagihan Setiap Tanggal</span>
+                        <span class="data-value" id="det-due">01</span>
+                    </div>
+                    <div class="data-highlight">
+                        <span style="font-size:10px; margin-right:20px;">Tanggal Isolir</span>
+                        <span id="det-iso-date" style="font-size:16px;">01</span>
+                    </div>
+                </div>
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0;">
+
+                <div class="data-row col">
+                    <span class="data-label">Alamat</span>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span class="data-value">Data alamat belum diisi lengkap </span>
+                        <span style="background:var(--navy-dark); color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:12px;">✎</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rincian Biaya -->
+            <div class="detail-card">
+                <h3>Rincian Biaya</h3>
+                <div class="data-row">
+                    <span class="data-value" id="det-pack">Nama Paket</span>
+                    <span class="data-value" id="det-price">Rp. 0</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">PPN 0%</span>
+                    <span class="data-label">Rp. 0</span>
+                </div>
+                <div class="data-row" style="margin-top:10px; font-weight:700;">
+                    <span class="data-value">Total Biaya Perbulan</span>
+                    <span class="data-value" style="color:var(--cyan-hover);" id="det-total">Rp. 0</span>
+                </div>
+            </div>
+
+            <!-- Rincian Jaringan -->
+            <div class="detail-card">
+                <h3>Rincian Jaringan</h3>
+                <div class="mikrotik-box">
+                    <div class="mikrotik-header">🛜 Mikrotik Secret</div>
+                    <div class="data-row">
+                        <span class="data-label">Mikrotik : Utama</span>
+                        <span class="data-label" style="color:var(--navy-dark); font-weight:700;">Uptime : <span id="det-uptime">Memeriksa...</span></span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Status Koneksi : <span id="det-pppoe" style="color:var(--navy-dark);">User</span></span>
+                        <span style="color:var(--success); font-weight:700; font-size:12px;" id="det-net-status">Online ↻</span>
+                    </div>
+                </div>
+                <div class="data-row col">
+                    <span class="data-label" style="color:var(--navy-dark); font-weight:700;">PPOE / Static - Modem</span>
+                    <span class="data-value" style="font-size:14px;" id="det-pppoe-bottom">User - Modem</span>
+                </div>
+            </div>
+
+            <div class="detail-actions">
+                <button class="btn-action-lg" id="btn-det-isolir" style="background:var(--danger); color:white;">🚫 ISOLIR</button>
+                <button class="btn-action-lg" id="btn-det-hapus" style="background:var(--text-muted); color:white;">🗑️ HAPUS</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL ADD CUSTOMER -->
     <div id="modal-customer" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Form Pelanggan</h3>
+                <h3>Tambah Pelanggan</h3>
                 <div class="close-modal" onclick="closeModal('modal-customer')">&times;</div>
             </div>
             <form id="form-customer">
-                <div class="form-section">Data Utama</div>
-                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required placeholder="Budi Santoso"></div>
-                <div class="form-group"><label>WA (Gunakan Awalan 62)</label><input type="number" id="cust-phone" required placeholder="6281234567890"></div>
-                
-                <div class="form-section">Data Internet & Billing</div>
-                <div class="form-group"><label>Paket Internet</label><input type="text" id="cust-package" required placeholder="HOME 20 Mbps"></div>
-                <div class="form-group"><label>Harga Bulanan</label><input type="number" id="cust-price" required placeholder="150000"></div>
-                <div class="form-group"><label>Username PPPoE (Wajib sama di Winbox)</label><input type="text" id="cust-user" required placeholder="budi_home"></div>
-                <div class="form-group"><label>Password PPPoE</label><input type="text" id="cust-pass" required placeholder="***"></div>
-                <div class="form-group"><label>Tanggal Jatuh Tempo (1-31)</label><input type="number" id="cust-due" min="1" max="31" required placeholder="20"></div>
-                
-                <button type="submit" id="btn-save-cust" class="btn-save">SIMPAN PELANGGAN</button>
+                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required></div>
+                <div class="form-group"><label>No. WhatsApp (Awali 62)</label><input type="number" id="cust-phone" required></div>
+                <div class="form-group"><label>Paket Internet</label><input type="text" id="cust-package" required></div>
+                <div class="form-group"><label>Harga Bulanan</label><input type="number" id="cust-price" required></div>
+                <div class="form-group"><label>Username PPPoE</label><input type="text" id="cust-user" required></div>
+                <div class="form-group"><label>Password PPPoE</label><input type="text" id="cust-pass" required></div>
+                <div class="form-group"><label>Tanggal Jatuh Tempo (1-31)</label><input type="number" id="cust-due" min="1" max="31" required></div>
+                <button type="submit" id="btn-save-cust" class="btn-save">SIMPAN DATA</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL INPUT PEMBAYARAN -->
+    <!-- MODAL PEMBAYARAN -->
     <div id="modal-payment" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Input Pembayaran</h3>
+                <h3>Catat Pembayaran</h3>
                 <div class="close-modal" onclick="closeModal('modal-payment')">&times;</div>
             </div>
             <form id="form-payment">
                 <div class="form-group">
                     <label>Pilih Pelanggan</label>
-                    <select id="pay-customer-id" required>
-                        <option value="">-- Memuat Data Pelanggan --</option>
-                    </select>
+                    <select id="pay-customer-id" required></select>
                 </div>
                 <div class="form-group">
                     <label>Nominal Pembayaran (Rp)</label>
-                    <input type="number" id="pay-amount" required placeholder="150000">
+                    <input type="number" id="pay-amount" required>
                 </div>
                 <div class="form-group">
                     <label>Metode Pembayaran</label>
                     <select id="pay-method" required>
-                        <option value="Cash">Cash / Tunai</option>
+                        <option value="Cash">Tunai / Cash</option>
                         <option value="Transfer Bank">Transfer Bank</option>
                         <option value="QRIS">QRIS</option>
-                        <option value="E-Wallet">E-Wallet</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Bulan Tagihan</label>
-                    <input type="date" id="pay-period" required>
-                </div>
-                
-                <button type="submit" id="btn-save-payment" class="btn-save">PROSES PEMBAYARAN</button>
+                <button type="submit" id="btn-save-payment" class="btn-save" style="background:var(--success);">KONFIRMASI LUNAS</button>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT LOGIKA SYSTEM -->
+    <!-- SCRIPT -->
     <script>
-        // UPDATE JAM REALTIME
-        setInterval(() => {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' };
-            document.getElementById('realtime-clock').innerText = now.toLocaleDateString('id-ID', options);
-        }, 1000);
-        document.getElementById('pay-period').valueAsDate = new Date(); // Set default today for billing period
-
-        // KREDENSIAL SUPABASE BOS
+        // KREDENSIAL SUPABASE
         var SUPABASE_URL = 'https://vljvulbjxhuysesronog.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsanZ1bGJqeGh1eXNlc3Jvbm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMjgyOTcsImV4cCI6MjEwMjYwNDI5N30.yPq1kySc9iPuOdS_eCWGRc60gUoklNqc2YRLQ7ILCIk';
         if (typeof window.supabaseClient === 'undefined') { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
         var db = window.supabaseClient;
-
-        // DATA GLOBAL
         var globalCustomers = [];
+        var activeDetailId = null;
+
+        // TANGGAL REALTIME HEADER
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('realtime-clock').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+        }, 1000);
 
         // LOGIN SYSTEM
         document.getElementById('login-form').addEventListener('submit', function(e) {
@@ -312,35 +392,33 @@
                 document.getElementById('pesan-error').style.display = 'block';
             }
         });
-        document.getElementById('btn-logout').addEventListener('click', function() { window.location.reload(); });
-        
-        // BOTTOM NAVIGATION
-        document.querySelectorAll('.nav-item').forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                if(!this.dataset.target) return; 
-                document.querySelectorAll('.nav-item').forEach(function(btn) { btn.classList.remove('active'); });
-                document.querySelectorAll('.view').forEach(function(view) { view.classList.remove('active'); });
+        document.getElementById('btn-logout').addEventListener('click', () => window.location.reload());
+
+        // NAVIGATION
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if(!this.dataset.target) return;
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
                 this.classList.add('active');
                 document.getElementById(this.dataset.target).classList.add('active');
             });
         });
 
-        // MODAL HANDLERS
+        // MODALS
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
         async function initData() {
             await loadCustomers();
-            await loadPayments();
+            await loadIncome();
         }
 
-        // FUNGSI SIMPAN PELANGGAN
+        // SIMPAN PELANGGAN
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
-            var btnSave = document.getElementById('btn-save-cust');
-            btnSave.disabled = true; btnSave.innerText = "MENYIMPAN...";
             try {
-                var { error } = await db.from('customers').insert([{
+                await db.from('customers').insert([{
                     name: document.getElementById('cust-name').value,
                     phone: document.getElementById('cust-phone').value,
                     packname: document.getElementById('cust-package').value,
@@ -350,205 +428,168 @@
                     due_date: parseInt(document.getElementById('cust-due').value),
                     isolation_status: 'NORMAL'
                 }]);
-                if (error) throw error;
-                alert("Pelanggan berhasil ditambahkan!");
                 document.getElementById('form-customer').reset();
                 closeModal('modal-customer');
                 initData();
-            } catch (err) { alert("Gagal menyimpan: " + err.message); } 
-            finally { btnSave.disabled = false; btnSave.innerText = "SIMPAN PELANGGAN"; }
+            } catch (err) { alert(err.message); }
         });
 
-        // FUNGSI INPUT PEMBAYARAN (KEUANGAN)
-        document.getElementById('form-payment').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var btnSave = document.getElementById('btn-save-payment');
-            var custId = document.getElementById('pay-customer-id').value;
-            var amount = parseInt(document.getElementById('pay-amount').value);
-            var method = document.getElementById('pay-method').value;
-            var period = document.getElementById('pay-period').value;
-
-            if(!custId) return alert("Pilih pelanggan terlebih dahulu!");
-
-            btnSave.disabled = true; btnSave.innerText = "MEMPROSES...";
-            try {
-                // 1. Simpan Riwayat Pembayaran ke Database
-                var { error: payError } = await db.from('payments').insert([{
-                    customer_id: custId,
-                    amount: amount,
-                    payment_method: method,
-                    billing_period: period
-                }]);
-                if (payError) throw payError;
-
-                // 2. Cek apakah pelanggan tersebut sedang terisolir?
-                var custData = globalCustomers.find(c => c.id === custId);
-                if(custData && custData.isolation_status === 'ISOLATED') {
-                    alert("Pembayaran tercatat! Sistem mendeteksi pelanggan Terisolir, segera mengaktifkan internet...");
-                    await setStatusIsolir(custId, custData.pppoe_username, false, true); // true = skip confirm
-                } else {
-                    alert("Pembayaran berhasil dicatat!");
-                }
-
-                document.getElementById('form-payment').reset();
-                document.getElementById('pay-period').valueAsDate = new Date();
-                closeModal('modal-payment');
-                initData();
-            } catch (err) { alert("Error sistem: " + err.message); } 
-            finally { btnSave.disabled = false; btnSave.innerText = "PROSES PEMBAYARAN"; }
-        });
-
-        // FUNGSI ISOLIR MIKROTIK
-        async function setStatusIsolir(customerId, pppoeUser, makeIsolated, skipConfirm = false) {
-            var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
-            if (!skipConfirm && !confirm(`Eksekusi MikroTik: Yakin ubah status pelanggan menjadi ${actionText}?`)) return;
-
-            try {
-                if(!skipConfirm) alert("Mengirim perintah ke Router MikroTik... Mohon tunggu.");
-                const response = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-                    body: JSON.stringify({ pppoe_username: pppoeUser, action: actionText })
-                });
-                const resultMikrotik = await response.json();
-                if (resultMikrotik.error) return alert("Gagal konek MikroTik: " + resultMikrotik.error);
-
-                var { error } = await db.from('customers').update({ isolation_status: actionText }).eq('id', customerId);
-                if (error) throw error;
-                
-                if(!skipConfirm) alert(`Eksekusi sukses! Pelanggan kini ${actionText}.`);
-                initData();
-            } catch (err) { alert("System Error: " + err.message); }
-        }
-
-        async function hapusPelanggan(customerId, namaPelanggan) {
-            if (!confirm(`OWNER ACTION: Hapus permanen pelanggan [ ${namaPelanggan} ] dari sistem?`)) return;
-            try {
-                var { error } = await db.from('customers').delete().eq('id', customerId);
-                if (error) throw error;
-                initData(); 
-            } catch (err) { alert("Gagal menghapus: " + err.message); }
-        }
-
-        // LOAD DATA PELANGGAN
+        // LOAD DATA LIST
         async function loadCustomers() {
             var list = document.getElementById('customer-list');
             var selectPay = document.getElementById('pay-customer-id');
             try {
-                var { data: customers, error } = await db.from('customers').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
+                var { data: customers } = await db.from('customers').select('*').order('created_at', { ascending: false });
                 globalCustomers = customers || [];
-
                 list.innerHTML = '';
                 selectPay.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
                 
-                if (globalCustomers.length === 0) {
-                    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Belum ada data pelanggan.</div>';
-                    return;
-                }
+                var totalAct = 0, totalIso = 0;
 
-                var totalActive = 0, totalIsolated = 0;
-
-                globalCustomers.forEach(function(cust) {
-                    var isIsolated = cust.isolation_status === 'ISOLATED';
-                    isIsolated ? totalIsolated++ : totalActive++;
+                globalCustomers.forEach(cust => {
+                    var isIso = cust.isolation_status === 'ISOLATED';
+                    isIso ? totalIso++ : totalAct++;
+                    selectPay.innerHTML += `<option value="${cust.id}">${cust.name}</option>`;
                     
-                    var badgeClass = isIsolated ? 'isolated' : 'active';
-                    var statusText = isIsolated ? 'TERISOLIR' : 'AKTIF';
-                    var cardClass = isIsolated ? 'data-card isolated' : 'data-card';
-                    var hargaFormat = cust.harga ? "Rp " + cust.harga.toLocaleString('id-ID') : "Rp 0";
-                    var noWA = cust.phone || "-";
-
-                    // Masukkan ke dropdown pembayaran
-                    selectPay.innerHTML += `<option value="${cust.id}">${cust.name} - ${cust.pppoe_username}</option>`;
-
-                    var actionButton = isIsolated 
-                        ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false)" class="btn-action btn-buka">⚡ AKTIFKAN</button>`
-                        : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true)" class="btn-action btn-isolir">🚫 ISOLIR</button>`;
-
                     list.innerHTML += `
-                        <div class="${cardClass}">
+                        <div class="data-card ${isIso ? 'isolated' : ''}" onclick="openDetail('${cust.id}')">
                             <div class="card-header">
                                 <h4 class="card-title">${cust.name}</h4>
-                                <span class="badge ${badgeClass}">${statusText}</span>
+                                <span class="badge ${isIso ? 'isolated' : 'active'}">${isIso ? 'TERISOLIR' : 'AKTIF'}</span>
                             </div>
                             <div class="card-details">
-                                <p>WA: <span>${noWA}</span></p>
-                                <p>Paket: <span>${cust.packname || '-'} (${hargaFormat})</span></p>
-                                <p>PPPoE: <span>${cust.pppoe_username}</span> | Jatuh Tempo: <span>Tgl ${cust.due_date}</span></p>
-                            </div>
-                            <div class="card-actions">
-                                <a href="https://wa.me/${noWA}" target="_blank" style="text-decoration:none;">
-                                    <button class="btn-action btn-wa">💬 WHATSAPP</button>
-                                </a>
-                                ${actionButton}
-                                <button onclick="hapusPelanggan('${cust.id}', '${cust.name}')" class="btn-action btn-hapus">HAPUS</button>
+                                <p>Paket: <span>${cust.packname || '-'}</span></p>
+                                <p>User: <span>${cust.pppoe_username}</span></p>
                             </div>
                         </div>`;
                 });
                 
                 document.getElementById('stat-total').innerText = globalCustomers.length;
-                document.getElementById('stat-active').innerText = totalActive;
-                document.getElementById('stat-isolated').innerText = totalIsolated;
+                document.getElementById('stat-active').innerText = totalAct;
+                document.getElementById('stat-isolated').innerText = totalIso;
             } catch (err) { console.error(err); }
         }
 
-        // LOAD DATA PEMBAYARAN & HITUNG PENDAPATAN
-        async function loadPayments() {
-            var list = document.getElementById('payment-list');
+        async function loadIncome() {
             try {
-                // Relasi sederhana ke tabel customers
-                var { data: payments, error } = await db.from('payments').select('*, customers(name, pppoe_username)').order('created_at', { ascending: false });
+                var { data: payments } = await db.from('payments').select('*');
+                var total = 0;
+                var currMonth = new Date().getMonth();
+                (payments || []).forEach(pay => {
+                    if(new Date(pay.created_at).getMonth() === currMonth) total += parseFloat(pay.amount);
+                });
+                document.getElementById('dashboard-income').innerText = "Rp " + total.toLocaleString('id-ID');
+            } catch(e) {}
+        }
+
+        // BUKA PROFIL DETAIL (MIRROR SCREENSHOT)
+        function openDetail(id) {
+            var cust = globalCustomers.find(c => c.id === id);
+            if(!cust) return;
+            activeDetailId = id;
+            
+            // Populate Data Header
+            document.getElementById('det-avatar').innerText = cust.name.charAt(0).toUpperCase();
+            document.getElementById('det-name').innerText = cust.name;
+            document.getElementById('det-phone').innerText = cust.phone || '-';
+            // Bikin ID unik palsu berdasar huruf jika tdk ada id pel
+            document.getElementById('det-id').innerText = "0489" + cust.id.substring(0,4).replace(/\D/g,'') || "2185";
+            
+            // Populate Status & Banner
+            var isIso = cust.isolation_status === 'ISOLATED';
+            var banner = document.getElementById('det-status-banner');
+            if(isIso) {
+                banner.className = 'status-banner danger';
+                banner.innerHTML = '<span class="icon">!</span> TERISOLIR - Harap Lakukan Pembayaran';
+            } else {
+                banner.className = 'status-banner';
+                banner.innerHTML = '<span class="icon">✓</span> Tidak ada Tagihan';
+            }
+
+            // Populate Rincian
+            var regDate = new Date(cust.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+            document.getElementById('det-reg').innerText = regDate;
+            document.getElementById('det-due').innerText = String(cust.due_date).padStart(2, '0');
+            document.getElementById('det-iso-date').innerText = String(cust.due_date).padStart(2, '0');
+            
+            var harga = cust.harga ? cust.harga : 0;
+            document.getElementById('det-pack').innerText = cust.packname || '-';
+            document.getElementById('det-price').innerText = "Rp. " + harga.toLocaleString('id-ID');
+            document.getElementById('det-total').innerText = "Rp. " + harga.toLocaleString('id-ID');
+            
+            document.getElementById('det-pppoe').innerText = cust.pppoe_username;
+            document.getElementById('det-pppoe-bottom').innerText = cust.pppoe_username + " - HG8145V5";
+
+            // Tombol Dinamis
+            var btnIso = document.getElementById('btn-det-isolir');
+            if(isIso) {
+                btnIso.innerText = "⚡ AKTIFKAN KEMBALI";
+                btnIso.style.background = "var(--success)";
+                btnIso.onclick = () => setStatusIsolir(cust.id, cust.pppoe_username, false);
+            } else {
+                btnIso.innerText = "🚫 ISOLIR PELANGGAN";
+                btnIso.style.background = "var(--danger)";
+                btnIso.onclick = () => setStatusIsolir(cust.id, cust.pppoe_username, true);
+            }
+
+            document.getElementById('btn-det-hapus').onclick = () => hapusPelanggan(cust.id, cust.name);
+
+            // Buka Layar Detail
+            document.getElementById('detail-screen').classList.add('active');
+        }
+
+        function closeDetailScreen() { document.getElementById('detail-screen').classList.remove('active'); }
+
+        // ISOLIR VIA MIKROTIK
+        async function setStatusIsolir(customerId, pppoeUser, makeIsolated) {
+            var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
+            if (!confirm(`Yakin ubah status pelanggan menjadi ${actionText}?`)) return;
+            try {
+                alert("Mengeksekusi Router MikroTik...");
+                const response = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+                    body: JSON.stringify({ pppoe_username: pppoeUser, action: actionText })
+                });
+                var { error } = await db.from('customers').update({ isolation_status: actionText }).eq('id', customerId);
                 if (error) throw error;
                 
-                list.innerHTML = '';
-                var totalIncomeThisMonth = 0;
-                var currentMonth = new Date().getMonth();
-                var currentYear = new Date().getFullYear();
-
-                if (!payments || payments.length === 0) {
-                    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Belum ada riwayat pembayaran.</div>';
-                } else {
-                    payments.forEach(function(pay) {
-                        // Hitung pendapatan bulan ini
-                        var payDate = new Date(pay.created_at);
-                        if(payDate.getMonth() === currentMonth && payDate.getFullYear() === currentYear) {
-                            totalIncomeThisMonth += parseFloat(pay.amount);
-                        }
-
-                        var custName = pay.customers ? pay.customers.name : "Pelanggan Terhapus";
-                        var nominal = "Rp " + parseFloat(pay.amount).toLocaleString('id-ID');
-                        var tglBayar = payDate.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
-
-                        list.innerHTML += `
-                            <div class="data-card payment">
-                                <div class="card-header">
-                                    <h4 class="card-title">${custName}</h4>
-                                    <span class="badge pay">LUNAS</span>
-                                </div>
-                                <div class="card-details">
-                                    <p>Nominal Bayar: <span style="color:var(--success); font-size:14px;">${nominal}</span></p>
-                                    <p>Metode: <span>${pay.payment_method}</span></p>
-                                    <p>Tanggal Transaksi: <span>${tglBayar}</span></p>
-                                </div>
-                            </div>`;
-                    });
-                }
-                
-                // Update text Dashboard Income
-                document.getElementById('dashboard-income').innerText = "Rp " + totalIncomeThisMonth.toLocaleString('id-ID');
-
-            } catch (err) { 
-                console.error("Gagal load pembayaran (Pastikan tabel 'payments' sudah ada)", err); 
-                document.getElementById('dashboard-income').innerText = "Rp 0";
-            }
+                alert("Sukses!");
+                closeDetailScreen();
+                initData();
+            } catch (err) { alert(err.message); }
         }
-        
-        // Auto isi nominal bayar saat pelanggan dipilih di modal
+
+        async function hapusPelanggan(id, name) {
+            if(!confirm(`Hapus pelanggan ${name}?`)) return;
+            await db.from('customers').delete().eq('id', id);
+            closeDetailScreen();
+            initData();
+        }
+
+        // PEMBAYARAN
         document.getElementById('pay-customer-id').addEventListener('change', function() {
-            var selectedId = this.value;
-            var cust = globalCustomers.find(c => c.id === selectedId);
-            if(cust && cust.harga) { document.getElementById('pay-amount').value = cust.harga; }
+            var cust = globalCustomers.find(c => c.id === this.value);
+            if(cust) document.getElementById('pay-amount').value = cust.harga;
+        });
+
+        document.getElementById('form-payment').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var id = document.getElementById('pay-customer-id').value;
+            var amt = parseInt(document.getElementById('pay-amount').value);
+            if(!id) return;
+            
+            try {
+                await db.from('payments').insert([{ customer_id: id, amount: amt, payment_method: document.getElementById('pay-method').value }]);
+                var cust = globalCustomers.find(c => c.id === id);
+                if(cust && cust.isolation_status === 'ISOLATED') {
+                    await setStatusIsolir(id, cust.pppoe_username, false);
+                }
+                document.getElementById('form-payment').reset();
+                closeModal('modal-payment');
+                initData();
+                alert("Pembayaran dicatat!");
+            } catch(e){ alert(e.message); }
         });
     </script>
 </body>
