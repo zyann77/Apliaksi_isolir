@@ -9,19 +9,10 @@
     <style>
         /* === TEMA PREMIUM: NAVY, WHITE, CYAN === */
         :root { 
-            --navy-dark: #0A192F; 
-            --navy-light: #112240; 
-            --cyan-accent: #64FFDA; 
-            --cyan-hover: #4CD8B5;
-            --bg-body: #F4F7FE; 
-            --card-bg: #FFFFFF; 
-            --text-main: #2B3674; 
-            --text-muted: #A3AED0; 
-            --danger: #FF5B5B; 
-            --success: #05CD99;
-            --warning: #FFCE20;
-            --shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.08); 
-            --border-rad: 16px;
+            --navy-dark: #0A192F; --navy-light: #112240; --cyan-accent: #64FFDA; --cyan-hover: #4CD8B5;
+            --bg-body: #F4F7FE; --card-bg: #FFFFFF; --text-main: #2B3674; --text-muted: #A3AED0; 
+            --danger: #FF5B5B; --success: #05CD99; --warning: #FFCE20;
+            --shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.08); --border-rad: 16px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -72,21 +63,23 @@
         .quick-btn:active { transform: scale(0.95); background: var(--bg-body); }
         .quick-icon { font-size: 20px; background: rgba(100, 255, 218, 0.15); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
 
-        /* === CUSTOMER LIST === */
+        /* === LIST CARDS === */
         .search-bar { background: var(--card-bg); padding: 15px; border-radius: 12px; border: none; box-shadow: var(--shadow); width: 100%; font-size: 14px; margin-bottom: 15px; outline: none; }
-        .customer-card { background: var(--card-bg); padding: 20px; border-radius: var(--border-rad); margin-bottom: 15px; box-shadow: var(--shadow); position: relative; overflow: hidden; border-left: 4px solid var(--success);}
-        .customer-card.isolated { border-left-color: var(--danger); }
+        .data-card { background: var(--card-bg); padding: 20px; border-radius: var(--border-rad); margin-bottom: 15px; box-shadow: var(--shadow); position: relative; overflow: hidden; border-left: 4px solid var(--success);}
+        .data-card.isolated { border-left-color: var(--danger); }
+        .data-card.payment { border-left-color: var(--cyan-hover); }
         
-        .cust-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .cust-name { font-size: 16px; font-weight: 700; color: var(--navy-dark); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .card-title { font-size: 16px; font-weight: 700; color: var(--navy-dark); }
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
         .badge.active { background: rgba(5, 205, 153, 0.1); color: var(--success); }
         .badge.isolated { background: rgba(255, 91, 91, 0.1); color: var(--danger); }
+        .badge.pay { background: rgba(100, 255, 218, 0.1); color: var(--cyan-hover); }
         
-        .cust-details p { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500;}
-        .cust-details span { color: var(--text-main); font-weight: 600; }
+        .card-details p { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500;}
+        .card-details span { color: var(--text-main); font-weight: 600; }
         
-        .cust-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; border-top: 1px solid var(--bg-body); padding-top: 15px;}
+        .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; border-top: 1px solid var(--bg-body); padding-top: 15px;}
         .btn-action { padding: 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; text-align: center; display: flex; justify-content: center; align-items: center; gap: 5px; transition: 0.2s;}
         .btn-wa { background: #25D366; color: white; }
         .btn-isolir { background: rgba(255, 91, 91, 0.1); color: var(--danger); }
@@ -101,10 +94,10 @@
         .nav-item .icon { font-size: 22px; transition: 0.3s; }
         .nav-item.active .icon { transform: translateY(-3px); }
 
-        /* === MODAL (ADD CUSTOMER) === */
+        /* === MODALS === */
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 25, 47, 0.7); backdrop-filter: blur(5px); z-index: 1000; align-items: flex-end; justify-content: center; }
         .modal.active { display: flex; animation: fadeIn 0.3s; }
-        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; height: 85vh; overflow-y: auto; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px; position: relative; animation: slideUp 0.3s ease-out;}
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px; position: relative; animation: slideUp 0.3s ease-out;}
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: -25px; background: var(--card-bg); padding: 25px 0 15px 0; z-index: 10; border-bottom: 1px solid var(--bg-body);}
@@ -115,10 +108,9 @@
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 12px; margin-bottom: 6px; font-weight: 600; color: var(--text-main);}
         .form-group input, .form-group select { width: 100%; padding: 14px; background: var(--bg-body); border: 1px solid transparent; border-radius: 10px; font-size: 14px; outline: none; transition: 0.3s; font-weight: 500;}
-        .form-group input:focus { border-color: var(--cyan-hover); background: white; box-shadow: 0 0 0 4px rgba(100, 255, 218, 0.1); }
+        .form-group input:focus, .form-group select:focus { border-color: var(--cyan-hover); background: white; box-shadow: 0 0 0 4px rgba(100, 255, 218, 0.1); }
         .btn-save { background: var(--navy-dark); color: var(--cyan-accent); padding: 16px; border: none; width: 100%; border-radius: 12px; font-size: 14px; font-weight: 800; margin-top: 10px; cursor: pointer; letter-spacing: 0.5px;}
 
-        /* FOOTER CREDIT */
         .credit-footer { text-align: center; padding: 10px; font-size: 10px; color: var(--text-muted); font-weight: 500; margin-bottom: 10px;}
     </style>
 </head>
@@ -153,7 +145,7 @@
             <section id="view-dashboard" class="view active">
                 <div class="finance-card">
                     <span>PENDAPATAN BULAN INI</span>
-                    <h1>Rp 125.500.000</h1>
+                    <h1 id="dashboard-income">Rp 0</h1>
                     <span style="color: var(--cyan-accent); font-size: 10px; margin-top: 8px;">● MIKROTIK: CONNECTED</span>
                 </div>
 
@@ -169,7 +161,7 @@
                     </div>
                     <div class="stat-card warning">
                         <span class="stat-label">Menunggak</span>
-                        <h3>0</h3> <!-- Placeholder UI baru -->
+                        <h3>0</h3> <!-- Disiapkan utk next update -->
                     </div>
                     <div class="stat-card danger">
                         <span class="stat-label">Terisolir</span>
@@ -179,29 +171,17 @@
 
                 <div class="section-title">QUICK ACTION</div>
                 <div class="quick-grid">
-                    <button class="quick-btn" onclick="openAddModal()">
+                    <button class="quick-btn" onclick="openModal('modal-customer')">
                         <div class="quick-icon">👤</div>
                         Tambah Pelanggan
                     </button>
-                    <button class="quick-btn">
-                        <div class="quick-icon">📄</div>
-                        Buat Tagihan
-                    </button>
-                    <button class="quick-btn">
+                    <button class="quick-btn" onclick="openModal('modal-payment')">
                         <div class="quick-icon">💰</div>
                         Input Bayar
                     </button>
                     <button class="quick-btn" onclick="document.querySelector('[data-target=\'view-customers\']').click()">
                         <div class="quick-icon">🚫</div>
                         Isolir Manual
-                    </button>
-                    <button class="quick-btn">
-                        <div class="quick-icon">⚡</div>
-                        Aktifkan
-                    </button>
-                    <button class="quick-btn">
-                        <div class="quick-icon">⚙️</div>
-                        Router MikroTik
                     </button>
                 </div>
                 <div class="credit-footer">Created by Iyann</div>
@@ -211,10 +191,13 @@
             <section id="view-customers" class="view">
                 <div class="section-title" style="margin-bottom: 5px;">DATA PELANGGAN</div>
                 <input type="text" class="search-bar" id="search-customer" placeholder="Cari nama atau nomor WA...">
-                
-                <div id="customer-list">
-                    <!-- Customer Cards akan di render disini oleh JS -->
-                </div>
+                <div id="customer-list"></div>
+            </section>
+
+            <!-- VIEW: BILLING (PAYMENTS) -->
+            <section id="view-billing" class="view">
+                <div class="section-title" style="margin-bottom: 5px;">RIWAYAT PEMBAYARAN</div>
+                <div id="payment-list"></div>
             </section>
         </main>
 
@@ -226,7 +209,7 @@
             <button class="nav-item" data-target="view-customers">
                 <span class="icon">👥</span><span class="label">Pelanggan</span>
             </button>
-            <button class="nav-item">
+            <button class="nav-item" data-target="view-billing">
                 <span class="icon">📄</span><span class="label">Billing</span>
             </button>
             <button class="nav-item">
@@ -238,18 +221,17 @@
         </nav>
     </div>
 
-    <!-- MODAL ADD CUSTOMER (BOTTOM SHEET STYLE) -->
+    <!-- MODAL ADD CUSTOMER -->
     <div id="modal-customer" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Form Pelanggan</h3>
-                <div class="close-modal" id="close-modal">&times;</div>
+                <div class="close-modal" onclick="closeModal('modal-customer')">&times;</div>
             </div>
             <form id="form-customer">
                 <div class="form-section">Data Utama</div>
                 <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required placeholder="Budi Santoso"></div>
                 <div class="form-group"><label>WA (Gunakan Awalan 62)</label><input type="number" id="cust-phone" required placeholder="6281234567890"></div>
-                <div class="form-group"><label>Alamat Lengkap</label><input type="text" placeholder="Jl. Merdeka No.1"></div>
                 
                 <div class="form-section">Data Internet & Billing</div>
                 <div class="form-group"><label>Paket Internet</label><input type="text" id="cust-package" required placeholder="HOME 20 Mbps"></div>
@@ -263,7 +245,44 @@
         </div>
     </div>
 
-    <!-- SCRIPT LOGIKA BAWAAN YANG TIDAK DIGANGGU -->
+    <!-- MODAL INPUT PEMBAYARAN -->
+    <div id="modal-payment" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Input Pembayaran</h3>
+                <div class="close-modal" onclick="closeModal('modal-payment')">&times;</div>
+            </div>
+            <form id="form-payment">
+                <div class="form-group">
+                    <label>Pilih Pelanggan</label>
+                    <select id="pay-customer-id" required>
+                        <option value="">-- Memuat Data Pelanggan --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nominal Pembayaran (Rp)</label>
+                    <input type="number" id="pay-amount" required placeholder="150000">
+                </div>
+                <div class="form-group">
+                    <label>Metode Pembayaran</label>
+                    <select id="pay-method" required>
+                        <option value="Cash">Cash / Tunai</option>
+                        <option value="Transfer Bank">Transfer Bank</option>
+                        <option value="QRIS">QRIS</option>
+                        <option value="E-Wallet">E-Wallet</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Bulan Tagihan</label>
+                    <input type="date" id="pay-period" required>
+                </div>
+                
+                <button type="submit" id="btn-save-payment" class="btn-save">PROSES PEMBAYARAN</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIKA SYSTEM -->
     <script>
         // UPDATE JAM REALTIME
         setInterval(() => {
@@ -271,54 +290,55 @@
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' };
             document.getElementById('realtime-clock').innerText = now.toLocaleDateString('id-ID', options);
         }, 1000);
+        document.getElementById('pay-period').valueAsDate = new Date(); // Set default today for billing period
 
-        // KREDENSIAL SUPABASE BOS (TIDAK DIGANGGU GUGAT)
+        // KREDENSIAL SUPABASE BOS
         var SUPABASE_URL = 'https://vljvulbjxhuysesronog.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsanZ1bGJqeGh1eXNlc3Jvbm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMjgyOTcsImV4cCI6MjEwMjYwNDI5N30.yPq1kySc9iPuOdS_eCWGRc60gUoklNqc2YRLQ7ILCIk';
         if (typeof window.supabaseClient === 'undefined') { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
         var db = window.supabaseClient;
 
-        // LOGIN KHUSUS OWNER (SUDAH DIUBAH SESUAI REQUEST)
+        // DATA GLOBAL
+        var globalCustomers = [];
+
+        // LOGIN SYSTEM
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            var user = document.getElementById('username').value;
-            var pass = document.getElementById('password').value;
-            
-            if (user === "admin" && pass === "1234") {
+            if (document.getElementById('username').value === "admin" && document.getElementById('password').value === "1234") {
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('app-screen').classList.add('active');
-                loadCustomers(); 
+                initData(); 
             } else {
                 document.getElementById('pesan-error').style.display = 'block';
-                document.getElementById('pesan-error').innerText = 'Username atau Password salah!';
             }
         });
-        
         document.getElementById('btn-logout').addEventListener('click', function() { window.location.reload(); });
         
-        // BOTTOM NAVIGATION LOGIC
+        // BOTTOM NAVIGATION
         document.querySelectorAll('.nav-item').forEach(function(button) {
             button.addEventListener('click', function(e) {
-                if(!this.dataset.target) return; // Abaikan menu yg belum ada id targetnya
+                if(!this.dataset.target) return; 
                 document.querySelectorAll('.nav-item').forEach(function(btn) { btn.classList.remove('active'); });
                 document.querySelectorAll('.view').forEach(function(view) { view.classList.remove('active'); });
-                
                 this.classList.add('active');
                 document.getElementById(this.dataset.target).classList.add('active');
             });
         });
 
-        // MODAL ADD LOGIC
-        function openAddModal() { document.getElementById('modal-customer').classList.add('active'); }
-        document.getElementById('close-modal').addEventListener('click', function() { document.getElementById('modal-customer').classList.remove('active'); });
+        // MODAL HANDLERS
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // FUNGSI SIMPAN PELANGGAN (Field sesuai struktur db terakhir)
+        async function initData() {
+            await loadCustomers();
+            await loadPayments();
+        }
+
+        // FUNGSI SIMPAN PELANGGAN
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
             var btnSave = document.getElementById('btn-save-cust');
-            btnSave.disabled = true;
-            btnSave.innerText = "MENYIMPAN...";
+            btnSave.disabled = true; btnSave.innerText = "MENYIMPAN...";
             try {
                 var { error } = await db.from('customers').insert([{
                     name: document.getElementById('cust-name').value,
@@ -333,24 +353,58 @@
                 if (error) throw error;
                 alert("Pelanggan berhasil ditambahkan!");
                 document.getElementById('form-customer').reset();
-                document.getElementById('modal-customer').classList.remove('active');
-                loadCustomers();
+                closeModal('modal-customer');
+                initData();
             } catch (err) { alert("Gagal menyimpan: " + err.message); } 
-            finally { 
-                btnSave.disabled = false; 
-                btnSave.innerText = "SIMPAN PELANGGAN";
-            }
+            finally { btnSave.disabled = false; btnSave.innerText = "SIMPAN PELANGGAN"; }
+        });
+
+        // FUNGSI INPUT PEMBAYARAN (KEUANGAN)
+        document.getElementById('form-payment').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var btnSave = document.getElementById('btn-save-payment');
+            var custId = document.getElementById('pay-customer-id').value;
+            var amount = parseInt(document.getElementById('pay-amount').value);
+            var method = document.getElementById('pay-method').value;
+            var period = document.getElementById('pay-period').value;
+
+            if(!custId) return alert("Pilih pelanggan terlebih dahulu!");
+
+            btnSave.disabled = true; btnSave.innerText = "MEMPROSES...";
+            try {
+                // 1. Simpan Riwayat Pembayaran ke Database
+                var { error: payError } = await db.from('payments').insert([{
+                    customer_id: custId,
+                    amount: amount,
+                    payment_method: method,
+                    billing_period: period
+                }]);
+                if (payError) throw payError;
+
+                // 2. Cek apakah pelanggan tersebut sedang terisolir?
+                var custData = globalCustomers.find(c => c.id === custId);
+                if(custData && custData.isolation_status === 'ISOLATED') {
+                    alert("Pembayaran tercatat! Sistem mendeteksi pelanggan Terisolir, segera mengaktifkan internet...");
+                    await setStatusIsolir(custId, custData.pppoe_username, false, true); // true = skip confirm
+                } else {
+                    alert("Pembayaran berhasil dicatat!");
+                }
+
+                document.getElementById('form-payment').reset();
+                document.getElementById('pay-period').valueAsDate = new Date();
+                closeModal('modal-payment');
+                initData();
+            } catch (err) { alert("Error sistem: " + err.message); } 
+            finally { btnSave.disabled = false; btnSave.innerText = "PROSES PEMBAYARAN"; }
         });
 
         // FUNGSI ISOLIR MIKROTIK
-        async function setStatusIsolir(customerId, pppoeUser, makeIsolated) {
+        async function setStatusIsolir(customerId, pppoeUser, makeIsolated, skipConfirm = false) {
             var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
-            if (!confirm(`Eksekusi MikroTik: Yakin ubah pelanggan ini menjadi ${actionText}?`)) return;
+            if (!skipConfirm && !confirm(`Eksekusi MikroTik: Yakin ubah status pelanggan menjadi ${actionText}?`)) return;
 
             try {
-                // Notifikasi smooth menggunakan alert bawaan dulu (sesuai JS lama)
-                alert("Mengirim perintah ke Router MikroTik... Mohon tunggu.");
-                
+                if(!skipConfirm) alert("Mengirim perintah ke Router MikroTik... Mohon tunggu.");
                 const response = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
@@ -362,42 +416,51 @@
                 var { error } = await db.from('customers').update({ isolation_status: actionText }).eq('id', customerId);
                 if (error) throw error;
                 
-                alert(`Eksekusi sukses! Pelanggan kini ${actionText}.`);
-                loadCustomers();
+                if(!skipConfirm) alert(`Eksekusi sukses! Pelanggan kini ${actionText}.`);
+                initData();
             } catch (err) { alert("System Error: " + err.message); }
         }
 
-        // FUNGSI HAPUS PELANGGAN
         async function hapusPelanggan(customerId, namaPelanggan) {
-            var konfirmasi = confirm(`OWNER ACTION: Hapus permanen pelanggan [ ${namaPelanggan} ] dari sistem?`);
-            if (!konfirmasi) return;
+            if (!confirm(`OWNER ACTION: Hapus permanen pelanggan [ ${namaPelanggan} ] dari sistem?`)) return;
             try {
                 var { error } = await db.from('customers').delete().eq('id', customerId);
                 if (error) throw error;
-                loadCustomers(); 
+                initData(); 
             } catch (err) { alert("Gagal menghapus: " + err.message); }
         }
 
-        // FUNGSI LOAD DATA PELANGGAN & RENDER PREMIUM CARD
+        // LOAD DATA PELANGGAN
         async function loadCustomers() {
             var list = document.getElementById('customer-list');
+            var selectPay = document.getElementById('pay-customer-id');
             try {
                 var { data: customers, error } = await db.from('customers').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
-                if (!customers || customers.length === 0) return list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px; font-weight:600;">Belum ada data pelanggan.</div>';
+                globalCustomers = customers || [];
 
                 list.innerHTML = '';
+                selectPay.innerHTML = '<option value="">-- Pilih Pelanggan --</option>';
+                
+                if (globalCustomers.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Belum ada data pelanggan.</div>';
+                    return;
+                }
+
                 var totalActive = 0, totalIsolated = 0;
 
-                customers.forEach(function(cust) {
+                globalCustomers.forEach(function(cust) {
                     var isIsolated = cust.isolation_status === 'ISOLATED';
                     isIsolated ? totalIsolated++ : totalActive++;
                     
                     var badgeClass = isIsolated ? 'isolated' : 'active';
                     var statusText = isIsolated ? 'TERISOLIR' : 'AKTIF';
-                    var cardClass = isIsolated ? 'customer-card isolated' : 'customer-card';
+                    var cardClass = isIsolated ? 'data-card isolated' : 'data-card';
                     var hargaFormat = cust.harga ? "Rp " + cust.harga.toLocaleString('id-ID') : "Rp 0";
                     var noWA = cust.phone || "-";
+
+                    // Masukkan ke dropdown pembayaran
+                    selectPay.innerHTML += `<option value="${cust.id}">${cust.name} - ${cust.pppoe_username}</option>`;
 
                     var actionButton = isIsolated 
                         ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false)" class="btn-action btn-buka">⚡ AKTIFKAN</button>`
@@ -405,16 +468,16 @@
 
                     list.innerHTML += `
                         <div class="${cardClass}">
-                            <div class="cust-header">
-                                <h4 class="cust-name">${cust.name}</h4>
+                            <div class="card-header">
+                                <h4 class="card-title">${cust.name}</h4>
                                 <span class="badge ${badgeClass}">${statusText}</span>
                             </div>
-                            <div class="cust-details">
+                            <div class="card-details">
                                 <p>WA: <span>${noWA}</span></p>
                                 <p>Paket: <span>${cust.packname || '-'} (${hargaFormat})</span></p>
                                 <p>PPPoE: <span>${cust.pppoe_username}</span> | Jatuh Tempo: <span>Tgl ${cust.due_date}</span></p>
                             </div>
-                            <div class="cust-actions">
+                            <div class="card-actions">
                                 <a href="https://wa.me/${noWA}" target="_blank" style="text-decoration:none;">
                                     <button class="btn-action btn-wa">💬 WHATSAPP</button>
                                 </a>
@@ -424,12 +487,69 @@
                         </div>`;
                 });
                 
-                // Update Dashboard Widget
-                document.getElementById('stat-total').innerText = customers.length;
+                document.getElementById('stat-total').innerText = globalCustomers.length;
                 document.getElementById('stat-active').innerText = totalActive;
                 document.getElementById('stat-isolated').innerText = totalIsolated;
-            } catch (err) { list.innerHTML = `<div style="text-align:center; color:var(--danger); padding:20px; font-weight:bold;">Error Fetching Data</div>`; }
+            } catch (err) { console.error(err); }
         }
+
+        // LOAD DATA PEMBAYARAN & HITUNG PENDAPATAN
+        async function loadPayments() {
+            var list = document.getElementById('payment-list');
+            try {
+                // Relasi sederhana ke tabel customers
+                var { data: payments, error } = await db.from('payments').select('*, customers(name, pppoe_username)').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                list.innerHTML = '';
+                var totalIncomeThisMonth = 0;
+                var currentMonth = new Date().getMonth();
+                var currentYear = new Date().getFullYear();
+
+                if (!payments || payments.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Belum ada riwayat pembayaran.</div>';
+                } else {
+                    payments.forEach(function(pay) {
+                        // Hitung pendapatan bulan ini
+                        var payDate = new Date(pay.created_at);
+                        if(payDate.getMonth() === currentMonth && payDate.getFullYear() === currentYear) {
+                            totalIncomeThisMonth += parseFloat(pay.amount);
+                        }
+
+                        var custName = pay.customers ? pay.customers.name : "Pelanggan Terhapus";
+                        var nominal = "Rp " + parseFloat(pay.amount).toLocaleString('id-ID');
+                        var tglBayar = payDate.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+
+                        list.innerHTML += `
+                            <div class="data-card payment">
+                                <div class="card-header">
+                                    <h4 class="card-title">${custName}</h4>
+                                    <span class="badge pay">LUNAS</span>
+                                </div>
+                                <div class="card-details">
+                                    <p>Nominal Bayar: <span style="color:var(--success); font-size:14px;">${nominal}</span></p>
+                                    <p>Metode: <span>${pay.payment_method}</span></p>
+                                    <p>Tanggal Transaksi: <span>${tglBayar}</span></p>
+                                </div>
+                            </div>`;
+                    });
+                }
+                
+                // Update text Dashboard Income
+                document.getElementById('dashboard-income').innerText = "Rp " + totalIncomeThisMonth.toLocaleString('id-ID');
+
+            } catch (err) { 
+                console.error("Gagal load pembayaran (Pastikan tabel 'payments' sudah ada)", err); 
+                document.getElementById('dashboard-income').innerText = "Rp 0";
+            }
+        }
+        
+        // Auto isi nominal bayar saat pelanggan dipilih di modal
+        document.getElementById('pay-customer-id').addEventListener('change', function() {
+            var selectedId = this.value;
+            var cust = globalCustomers.find(c => c.id === selectedId);
+            if(cust && cust.harga) { document.getElementById('pay-amount').value = cust.harga; }
+        });
     </script>
 </body>
 </html>
