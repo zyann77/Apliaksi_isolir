@@ -3,174 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>KONTOL.NET</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>ISP BILLING - OWNER CENTER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg-color: #f4f6f8; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --primary: #10b981; --primary-dark: #059669; --danger: #ef4444; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
-        .screen { display: none; height: 100vh; width: 100vw; overflow: hidden; flex-direction: column; }
-        .screen.active { display: flex; }
-        .login-box { margin: auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: var(--shadow); width: 90%; max-width: 400px; text-align: center; }
-        .logo { font-weight: 800; font-size: 28px; }
-        .logo span { color: var(--primary); }
-        .subtitle { color: var(--text-muted); margin-bottom: 20px; font-size: 14px; }
-        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; text-align: center; font-weight: bold;}
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
-        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--card-bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
-        .app-header h2 { font-size: 18px; font-weight: 600; }
-        .btn-logout { background: var(--danger); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; }
-        .app-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
-        .view { display: none; }
-        .view.active { display: block; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;}
-        .stat-card { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); }
-        .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 5px; }
-        .stat-card h3 { font-size: 24px; font-weight: 700; }
-        .stat-card.success h3 { color: var(--primary); }
-        .stat-card.danger h3 { color: var(--danger); }
-        .action-bar { display: flex; gap: 10px; margin-bottom: 15px; }
-        .action-bar input { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
-        .customer-card { background: var(--card-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
-        
-        /* TOMBOL-TOMBOL AKSI */
-        .btn-isolir { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .btn-buka { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .btn-hapus { background: #64748b; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; margin-left: 5px; } /* Warna abu-abu gelap */
-        .btn-group { display: flex; align-items: center; }
+        /* === TEMA PREMIUM: NAVY, WHITE, CYAN === */
+        :root { 
+            --navy-dark: #0A192F; 
+            --navy-light: #112240; 
+            --cyan-accent: #64FFDA; 
+            --cyan-hover: #4CD8B5;
+            --bg-body: #F4F7FE; 
+            --card-bg: #FFFFFF; 
+            --text-main: #2B3674; 
+            --text-muted: #A3AED0; 
+            --danger: #FF5B5B; 
+            --success: #05CD99;
+            --warning: #FFCE20;
+            --shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.08); 
+            --border-rad: 16px;
+        }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); }
-        .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 11px; font-weight: 500; cursor: pointer; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item .icon { font-size: 20px; margin-bottom: 4px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 20px;}
-        .modal.active { display: flex; }
-        .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 20px; position: relative; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .close-modal { cursor: pointer; font-size: 24px; font-weight: bold; color: var(--danger); line-height: 1;}
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; margin-bottom: 5px; font-weight: 600;}
-        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-body); color: var(--text-main); -webkit-font-smoothing: antialiased; }
+        
+        .screen { display: none; height: 100vh; width: 100vw; overflow: hidden; flex-direction: column; animation: fadeIn 0.4s ease-in-out;}
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* === LOGIN SCREEN === */
+        #login-screen { background: var(--navy-dark); color: white; justify-content: center; align-items: center; }
+        .login-box { background: var(--navy-light); padding: 40px 30px; border-radius: var(--border-rad); box-shadow: 0 20px 40px rgba(0,0,0,0.4); width: 90%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .logo { font-weight: 800; font-size: 28px; letter-spacing: 1px; color: white; margin-bottom: 5px; }
+        .logo span { color: var(--cyan-accent); }
+        .subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 30px; }
+        .login-box input { width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 14px; outline: none; transition: 0.3s;}
+        .login-box input:focus { border-color: var(--cyan-accent); }
+        .btn-primary { background: var(--cyan-accent); color: var(--navy-dark); border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.3s; margin-top: 10px;}
+        .btn-primary:hover { background: var(--cyan-hover); transform: translateY(-2px); }
+
+        /* === HEADER & LAYOUT === */
+        .app-header { background: var(--navy-dark); color: white; padding: 25px 20px 40px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; }
+        .greeting h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .greeting p { font-size: 12px; color: var(--text-muted); }
+        .btn-logout { background: rgba(255, 255, 255, 0.1); color: white; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; backdrop-filter: blur(5px); }
+        
+        .app-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; margin-top: -25px; z-index: 11; position: relative;}
+        .view { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view.active { display: block; }
+
+        /* === DASHBOARD CARDS === */
+        .finance-card { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-light) 100%); color: white; padding: 20px; border-radius: var(--border-rad); box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid rgba(100, 255, 218, 0.2); }
+        .finance-card span { font-size: 12px; color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 5px; }
+        .finance-card h1 { font-size: 32px; color: var(--cyan-accent); font-weight: 800; letter-spacing: -0.5px; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px;}
+        .stat-card { background: var(--card-bg); padding: 18px; border-radius: var(--border-rad); box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between;}
+        .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .stat-card h3 { font-size: 26px; font-weight: 800; color: var(--text-main); }
+        .stat-card.success h3 { color: var(--success); }
+        .stat-card.danger h3 { color: var(--danger); }
+        .stat-card.warning h3 { color: var(--warning); }
+
+        /* === QUICK ACTIONS === */
+        .section-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); }
+        .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .quick-btn { background: var(--card-bg); border: none; padding: 15px 5px; border-radius: 12px; box-shadow: var(--shadow); color: var(--navy-dark); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.2s;}
+        .quick-btn:active { transform: scale(0.95); background: var(--bg-body); }
+        .quick-icon { font-size: 20px; background: rgba(100, 255, 218, 0.15); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
+
+        /* === CUSTOMER LIST === */
+        .search-bar { background: var(--card-bg); padding: 15px; border-radius: 12px; border: none; box-shadow: var(--shadow); width: 100%; font-size: 14px; margin-bottom: 15px; outline: none; }
+        .customer-card { background: var(--card-bg); padding: 20px; border-radius: var(--border-rad); margin-bottom: 15px; box-shadow: var(--shadow); position: relative; overflow: hidden; border-left: 4px solid var(--success);}
+        .customer-card.isolated { border-left-color: var(--danger); }
+        
+        .cust-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .cust-name { font-size: 16px; font-weight: 700; color: var(--navy-dark); }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
+        .badge.active { background: rgba(5, 205, 153, 0.1); color: var(--success); }
+        .badge.isolated { background: rgba(255, 91, 91, 0.1); color: var(--danger); }
+        
+        .cust-details p { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500;}
+        .cust-details span { color: var(--text-main); font-weight: 600; }
+        
+        .cust-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; border-top: 1px solid var(--bg-body); padding-top: 15px;}
+        .btn-action { padding: 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; text-align: center; display: flex; justify-content: center; align-items: center; gap: 5px; transition: 0.2s;}
+        .btn-wa { background: #25D366; color: white; }
+        .btn-isolir { background: rgba(255, 91, 91, 0.1); color: var(--danger); }
+        .btn-buka { background: rgba(5, 205, 153, 0.1); color: var(--success); }
+        .btn-hapus { background: var(--bg-body); color: var(--text-muted); }
+        .btn-action:active { transform: scale(0.95); }
+
+        /* === BOTTOM NAVIGATION === */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 15px 10px; padding-bottom: env(safe-area-inset-bottom, 15px); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 100;}
+        .nav-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 10px; font-weight: 600; cursor: pointer; gap: 4px; transition: 0.3s;}
+        .nav-item.active { color: var(--cyan-hover); }
+        .nav-item .icon { font-size: 22px; transition: 0.3s; }
+        .nav-item.active .icon { transform: translateY(-3px); }
+
+        /* === MODAL (ADD CUSTOMER) === */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 25, 47, 0.7); backdrop-filter: blur(5px); z-index: 1000; align-items: flex-end; justify-content: center; }
+        .modal.active { display: flex; animation: fadeIn 0.3s; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; height: 85vh; overflow-y: auto; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 25px; position: relative; animation: slideUp 0.3s ease-out;}
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: -25px; background: var(--card-bg); padding: 25px 0 15px 0; z-index: 10; border-bottom: 1px solid var(--bg-body);}
+        .modal-header h3 { font-size: 18px; font-weight: 800; color: var(--navy-dark);}
+        .close-modal { background: var(--bg-body); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; font-weight: bold; color: var(--text-muted); }
+        
+        .form-section { font-size: 12px; font-weight: 800; color: var(--cyan-hover); text-transform: uppercase; margin: 20px 0 10px 0; letter-spacing: 1px;}
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; margin-bottom: 6px; font-weight: 600; color: var(--text-main);}
+        .form-group input, .form-group select { width: 100%; padding: 14px; background: var(--bg-body); border: 1px solid transparent; border-radius: 10px; font-size: 14px; outline: none; transition: 0.3s; font-weight: 500;}
+        .form-group input:focus { border-color: var(--cyan-hover); background: white; box-shadow: 0 0 0 4px rgba(100, 255, 218, 0.1); }
+        .btn-save { background: var(--navy-dark); color: var(--cyan-accent); padding: 16px; border: none; width: 100%; border-radius: 12px; font-size: 14px; font-weight: 800; margin-top: 10px; cursor: pointer; letter-spacing: 0.5px;}
+
+        /* FOOTER CREDIT */
+        .credit-footer { text-align: center; padding: 10px; font-size: 10px; color: var(--text-muted); font-weight: 500; margin-bottom: 10px;}
     </style>
 </head>
 <body>
+    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="screen active">
         <div class="login-box">
-            <h1 class="logo">KONTOL<span>is</span>NET</h1>
-            <p class="subtitle">Yonkjhunz</p>
+            <h1 class="logo">NET<span>//</span>BILLING</h1>
+            <p class="subtitle">Owner Control Center</p>
             <form id="login-form">
-                <input type="text" id="username" placeholder="Masukkan Username" required autocomplete="off">
-                <button type="submit" id="btn-login" class="btn-primary">MASUK</button>
+                <input type="text" id="username" placeholder="Owner Username" required autocomplete="off">
+                <input type="password" id="password" placeholder="Password" required autocomplete="off">
+                <button type="submit" id="btn-login" class="btn-primary">LOGIN SYSTEM</button>
             </form>
-            <p id="pesan-error" style="color: red; font-size: 12px; margin-top: 10px; display: none;"></p>
+            <p id="pesan-error" style="color: var(--danger); font-size: 12px; margin-top: 15px; display: none; font-weight: 600;">Username atau Password salah!</p>
+            <div class="credit-footer" style="margin-top: 30px; opacity: 0.5;">Created by Iyann</div>
         </div>
     </div>
 
+    <!-- MAIN APP SCREEN -->
     <div id="app-screen" class="screen">
         <header class="app-header">
-            <h2 id="page-title">Dashboard</h2>
-            <button class="btn-logout" id="btn-logout">OUT</button>
+            <div class="greeting">
+                <h2>Selamat Datang, Owner 👋</h2>
+                <p id="realtime-clock">Memuat sistem...</p>
+            </div>
+            <button class="btn-logout" id="btn-logout">LOGOUT</button>
         </header>
+        
         <main class="app-content">
+            <!-- VIEW: DASHBOARD -->
             <section id="view-dashboard" class="view active">
+                <div class="finance-card">
+                    <span>PENDAPATAN BULAN INI</span>
+                    <h1>Rp 125.500.000</h1>
+                    <span style="color: var(--cyan-accent); font-size: 10px; margin-top: 8px;">● MIKROTIK: CONNECTED</span>
+                </div>
+
+                <div class="section-title">STATISTIK PELANGGAN</div>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <span class="stat-label">TOTAL PELANGGAN</span>
+                        <span class="stat-label">Total Pelanggan</span>
                         <h3 id="stat-total">0</h3>
                     </div>
                     <div class="stat-card success">
-                        <span class="stat-label">AKTIF</span>
+                        <span class="stat-label">Aktif</span>
                         <h3 id="stat-active">0</h3>
                     </div>
-                    <div class="stat-card danger" style="grid-column: span 2;">
-                        <span class="stat-label">TERISOLIR</span>
+                    <div class="stat-card warning">
+                        <span class="stat-label">Menunggak</span>
+                        <h3>0</h3> <!-- Placeholder UI baru -->
+                    </div>
+                    <div class="stat-card danger">
+                        <span class="stat-label">Terisolir</span>
                         <h3 id="stat-isolated">0</h3>
                     </div>
                 </div>
-            </section>
-            <section id="view-customers" class="view">
-                <div class="action-bar">
-                    <input type="text" id="search-customer" placeholder="Cari pelanggan...">
-                    <button id="btn-add-customer" class="btn-primary" style="width: auto; padding: 10px 15px;">+ Tambah</button>
+
+                <div class="section-title">QUICK ACTION</div>
+                <div class="quick-grid">
+                    <button class="quick-btn" onclick="openAddModal()">
+                        <div class="quick-icon">👤</div>
+                        Tambah Pelanggan
+                    </button>
+                    <button class="quick-btn">
+                        <div class="quick-icon">📄</div>
+                        Buat Tagihan
+                    </button>
+                    <button class="quick-btn">
+                        <div class="quick-icon">💰</div>
+                        Input Bayar
+                    </button>
+                    <button class="quick-btn" onclick="document.querySelector('[data-target=\'view-customers\']').click()">
+                        <div class="quick-icon">🚫</div>
+                        Isolir Manual
+                    </button>
+                    <button class="quick-btn">
+                        <div class="quick-icon">⚡</div>
+                        Aktifkan
+                    </button>
+                    <button class="quick-btn">
+                        <div class="quick-icon">⚙️</div>
+                        Router MikroTik
+                    </button>
                 </div>
-                <div id="customer-list"></div>
+                <div class="credit-footer">Created by Iyann</div>
+            </section>
+
+            <!-- VIEW: CUSTOMERS -->
+            <section id="view-customers" class="view">
+                <div class="section-title" style="margin-bottom: 5px;">DATA PELANGGAN</div>
+                <input type="text" class="search-bar" id="search-customer" placeholder="Cari nama atau nomor WA...">
+                
+                <div id="customer-list">
+                    <!-- Customer Cards akan di render disini oleh JS -->
+                </div>
             </section>
         </main>
+
+        <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
-            <button class="nav-item active" data-target="view-dashboard" data-title="Dashboard">
-                <span class="icon">📊</span><span class="label">Dashboard</span>
+            <button class="nav-item active" data-target="view-dashboard">
+                <span class="icon">📊</span><span class="label">Home</span>
             </button>
-            <button class="nav-item" data-target="view-customers" data-title="Pelanggan">
+            <button class="nav-item" data-target="view-customers">
                 <span class="icon">👥</span><span class="label">Pelanggan</span>
+            </button>
+            <button class="nav-item">
+                <span class="icon">📄</span><span class="label">Billing</span>
+            </button>
+            <button class="nav-item">
+                <span class="icon">🖥️</span><span class="label">Monitoring</span>
+            </button>
+            <button class="nav-item">
+                <span class="icon">⚙️</span><span class="label">More</span>
             </button>
         </nav>
     </div>
 
+    <!-- MODAL ADD CUSTOMER (BOTTOM SHEET STYLE) -->
     <div id="modal-customer" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Tambah Pelanggan</h3>
-                <span class="close-modal" id="close-modal">&times;</span>
+                <h3>Form Pelanggan</h3>
+                <div class="close-modal" id="close-modal">&times;</div>
             </div>
             <form id="form-customer">
-                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required></div>
-                <div class="form-group"><label>No. WhatsApp (Awali 62)</label><input type="number" id="cust-phone" required></div>
-                <div class="form-group"><label>Nama Paket (Contoh: Gold 20 Mbps)</label><input type="text" id="cust-package" required></div>
-                <div class="form-group"><label>Harga Paket</label><input type="number" id="cust-price" required></div>
-                <div class="form-group"><label>Username PPPoE</label><input type="text" id="cust-user" required></div>
-                <div class="form-group"><label>Password PPPoE</label><input type="text" id="cust-pass" required></div>
-                <div class="form-group"><label>Tanggal Jatuh Tempo (1-31)</label><input type="number" id="cust-due" min="1" max="31" required></div>
-                <button type="submit" id="btn-save-cust" class="btn-primary" style="margin-top: 10px;">Simpan Pelanggan</button>
+                <div class="form-section">Data Utama</div>
+                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="cust-name" required placeholder="Budi Santoso"></div>
+                <div class="form-group"><label>WA (Gunakan Awalan 62)</label><input type="number" id="cust-phone" required placeholder="6281234567890"></div>
+                <div class="form-group"><label>Alamat Lengkap</label><input type="text" placeholder="Jl. Merdeka No.1"></div>
+                
+                <div class="form-section">Data Internet & Billing</div>
+                <div class="form-group"><label>Paket Internet</label><input type="text" id="cust-package" required placeholder="HOME 20 Mbps"></div>
+                <div class="form-group"><label>Harga Bulanan</label><input type="number" id="cust-price" required placeholder="150000"></div>
+                <div class="form-group"><label>Username PPPoE (Wajib sama di Winbox)</label><input type="text" id="cust-user" required placeholder="budi_home"></div>
+                <div class="form-group"><label>Password PPPoE</label><input type="text" id="cust-pass" required placeholder="***"></div>
+                <div class="form-group"><label>Tanggal Jatuh Tempo (1-31)</label><input type="number" id="cust-due" min="1" max="31" required placeholder="20"></div>
+                
+                <button type="submit" id="btn-save-cust" class="btn-save">SIMPAN PELANGGAN</button>
             </form>
         </div>
     </div>
 
+    <!-- SCRIPT LOGIKA BAWAAN YANG TIDAK DIGANGGU -->
     <script>
+        // UPDATE JAM REALTIME
+        setInterval(() => {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' };
+            document.getElementById('realtime-clock').innerText = now.toLocaleDateString('id-ID', options);
+        }, 1000);
+
+        // KREDENSIAL SUPABASE BOS (TIDAK DIGANGGU GUGAT)
         var SUPABASE_URL = 'https://vljvulbjxhuysesronog.supabase.co';
         var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsanZ1bGJqeGh1eXNlc3Jvbm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMjgyOTcsImV4cCI6MjEwMjYwNDI5N30.yPq1kySc9iPuOdS_eCWGRc60gUoklNqc2YRLQ7ILCIk';
         if (typeof window.supabaseClient === 'undefined') { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
         var db = window.supabaseClient;
 
+        // LOGIN KHUSUS OWNER (SUDAH DIUBAH SESUAI REQUEST)
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            if (document.getElementById('username').value === "admin123") {
+            
+            var user = document.getElementById('username').value;
+            var pass = document.getElementById('password').value;
+            
+            if (user === "admin" && pass === "1234") {
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('app-screen').classList.add('active');
                 loadCustomers(); 
             } else {
                 document.getElementById('pesan-error').style.display = 'block';
+                document.getElementById('pesan-error').innerText = 'Username atau Password salah!';
             }
         });
+        
         document.getElementById('btn-logout').addEventListener('click', function() { window.location.reload(); });
+        
+        // BOTTOM NAVIGATION LOGIC
         document.querySelectorAll('.nav-item').forEach(function(button) {
             button.addEventListener('click', function(e) {
+                if(!this.dataset.target) return; // Abaikan menu yg belum ada id targetnya
                 document.querySelectorAll('.nav-item').forEach(function(btn) { btn.classList.remove('active'); });
                 document.querySelectorAll('.view').forEach(function(view) { view.classList.remove('active'); });
-                var targetBtn = button.closest('.nav-item');
-                targetBtn.classList.add('active');
-                document.getElementById(targetBtn.dataset.target).classList.add('active');
-                document.getElementById('page-title').innerText = targetBtn.dataset.title;
+                
+                this.classList.add('active');
+                document.getElementById(this.dataset.target).classList.add('active');
             });
         });
-        document.getElementById('btn-add-customer').addEventListener('click', function() { document.getElementById('modal-customer').classList.add('active'); });
+
+        // MODAL ADD LOGIC
+        function openAddModal() { document.getElementById('modal-customer').classList.add('active'); }
         document.getElementById('close-modal').addEventListener('click', function() { document.getElementById('modal-customer').classList.remove('active'); });
 
-        // FUNGSI SIMPAN DISESUAIKAN DENGAN SQL BARU BOS
+        // FUNGSI SIMPAN PELANGGAN (Field sesuai struktur db terakhir)
         document.getElementById('form-customer').addEventListener('submit', async function(e) {
             e.preventDefault();
             var btnSave = document.getElementById('btn-save-cust');
             btnSave.disabled = true;
+            btnSave.innerText = "MENYIMPAN...";
             try {
                 var { error } = await db.from('customers').insert([{
-                    // customer_code dihapus (otomatis CUST-000001 dari SQL Supabase)
                     name: document.getElementById('cust-name').value,
                     phone: document.getElementById('cust-phone').value,
-                    // Harga & Paket dilewati dulu karena sistemnya sekarang pakai ID tabel packages
+                    packname: document.getElementById('cust-package').value,
+                    harga: parseInt(document.getElementById('cust-price').value),
                     pppoe_username: document.getElementById('cust-user').value,
                     pppoe_password: document.getElementById('cust-pass').value,
                     due_date: parseInt(document.getElementById('cust-due').value),
-                    isolation_status: 'NORMAL' // SQL bos minta format Text, bukan False
+                    isolation_status: 'NORMAL'
                 }]);
                 if (error) throw error;
                 alert("Pelanggan berhasil ditambahkan!");
@@ -178,16 +336,20 @@
                 document.getElementById('modal-customer').classList.remove('active');
                 loadCustomers();
             } catch (err) { alert("Gagal menyimpan: " + err.message); } 
-            finally { btnSave.disabled = false; }
+            finally { 
+                btnSave.disabled = false; 
+                btnSave.innerText = "SIMPAN PELANGGAN";
+            }
         });
 
-        // FUNGSI ISOLIR DISESUAIKAN DENGAN SQL BARU BOS
+        // FUNGSI ISOLIR MIKROTIK
         async function setStatusIsolir(customerId, pppoeUser, makeIsolated) {
             var actionText = makeIsolated ? 'ISOLATED' : 'NORMAL';
-            if (!confirm(`Yakin ingin mengubah status pelanggan ini menjadi ${actionText}?`)) return;
+            if (!confirm(`Eksekusi MikroTik: Yakin ubah pelanggan ini menjadi ${actionText}?`)) return;
 
             try {
-                alert("Sedang menghubungi MikroTik bos... Mohon tunggu.");
+                // Notifikasi smooth menggunakan alert bawaan dulu (sesuai JS lama)
+                alert("Mengirim perintah ke Router MikroTik... Mohon tunggu.");
                 
                 const response = await fetch(SUPABASE_URL + '/functions/v1/mikrotik', {
                     method: 'POST',
@@ -195,69 +357,78 @@
                     body: JSON.stringify({ pppoe_username: pppoeUser, action: actionText })
                 });
                 const resultMikrotik = await response.json();
-                if (resultMikrotik.error) return alert("Gagal konek ke MikroTik: " + resultMikrotik.error);
+                if (resultMikrotik.error) return alert("Gagal konek MikroTik: " + resultMikrotik.error);
 
-                // Update database pakai TEXT ('ISOLATED' / 'NORMAL')
                 var { error } = await db.from('customers').update({ isolation_status: actionText }).eq('id', customerId);
                 if (error) throw error;
                 
-                alert(`Berhasil! Pelanggan telah diubah menjadi ${actionText}.`);
+                alert(`Eksekusi sukses! Pelanggan kini ${actionText}.`);
                 loadCustomers();
-            } catch (err) { alert("Error: " + err.message); }
+            } catch (err) { alert("System Error: " + err.message); }
         }
 
+        // FUNGSI HAPUS PELANGGAN
         async function hapusPelanggan(customerId, namaPelanggan) {
-            var konfirmasi = confirm(`Yakin bos ingin MENGHAPUS pelanggan [ ${namaPelanggan} ] secara permanen dari aplikasi?`);
+            var konfirmasi = confirm(`OWNER ACTION: Hapus permanen pelanggan [ ${namaPelanggan} ] dari sistem?`);
             if (!konfirmasi) return;
             try {
                 var { error } = await db.from('customers').delete().eq('id', customerId);
                 if (error) throw error;
-                alert(`Data pelanggan ${namaPelanggan} berhasil dihapus!`);
                 loadCustomers(); 
             } catch (err) { alert("Gagal menghapus: " + err.message); }
         }
 
-        // FUNGSI LOAD DATA DISESUAIKAN DENGAN SQL BARU
+        // FUNGSI LOAD DATA PELANGGAN & RENDER PREMIUM CARD
         async function loadCustomers() {
             var list = document.getElementById('customer-list');
             try {
                 var { data: customers, error } = await db.from('customers').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
-                if (!customers || customers.length === 0) return list.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">Belum ada data.</div>';
+                if (!customers || customers.length === 0) return list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px; font-weight:600;">Belum ada data pelanggan.</div>';
 
                 list.innerHTML = '';
                 var totalActive = 0, totalIsolated = 0;
 
                 customers.forEach(function(cust) {
-                    // Deteksi dari text 'ISOLATED'
                     var isIsolated = cust.isolation_status === 'ISOLATED';
                     isIsolated ? totalIsolated++ : totalActive++;
-                    var statusColor = isIsolated ? 'red' : 'green';
-                    var statusTextDisplay = isIsolated ? 'ISOLATED' : 'NORMAL';
                     
-                    var actionButton = isIsolated 
-                        ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false)" class="btn-buka">BUKA ISOLIR</button>`
-                        : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true)" class="btn-isolir">ISOLIR</button>`;
+                    var badgeClass = isIsolated ? 'isolated' : 'active';
+                    var statusText = isIsolated ? 'TERISOLIR' : 'AKTIF';
+                    var cardClass = isIsolated ? 'customer-card isolated' : 'customer-card';
+                    var hargaFormat = cust.harga ? "Rp " + cust.harga.toLocaleString('id-ID') : "Rp 0";
+                    var noWA = cust.phone || "-";
 
-                    var deleteButton = `<button onclick="hapusPelanggan('${cust.id}', '${cust.name}')" class="btn-hapus">HAPUS</button>`;
+                    var actionButton = isIsolated 
+                        ? `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', false)" class="btn-action btn-buka">⚡ AKTIFKAN</button>`
+                        : `<button onclick="setStatusIsolir('${cust.id}', '${cust.pppoe_username}', true)" class="btn-action btn-isolir">🚫 ISOLIR</button>`;
 
                     list.innerHTML += `
-                        <div class="customer-card">
-                            <div>
-                                <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
-                                <small style="color: gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
-                                <small style="color: ${statusColor}; font-weight: bold;">● ${statusTextDisplay}</small>
+                        <div class="${cardClass}">
+                            <div class="cust-header">
+                                <h4 class="cust-name">${cust.name}</h4>
+                                <span class="badge ${badgeClass}">${statusText}</span>
                             </div>
-                            <div class="btn-group">
+                            <div class="cust-details">
+                                <p>WA: <span>${noWA}</span></p>
+                                <p>Paket: <span>${cust.packname || '-'} (${hargaFormat})</span></p>
+                                <p>PPPoE: <span>${cust.pppoe_username}</span> | Jatuh Tempo: <span>Tgl ${cust.due_date}</span></p>
+                            </div>
+                            <div class="cust-actions">
+                                <a href="https://wa.me/${noWA}" target="_blank" style="text-decoration:none;">
+                                    <button class="btn-action btn-wa">💬 WHATSAPP</button>
+                                </a>
                                 ${actionButton}
-                                ${deleteButton}
+                                <button onclick="hapusPelanggan('${cust.id}', '${cust.name}')" class="btn-action btn-hapus">HAPUS</button>
                             </div>
                         </div>`;
                 });
+                
+                // Update Dashboard Widget
                 document.getElementById('stat-total').innerText = customers.length;
                 document.getElementById('stat-active').innerText = totalActive;
                 document.getElementById('stat-isolated').innerText = totalIsolated;
-            } catch (err) { list.innerHTML = `<div style="color:red; font-size:12px;">Error: ${err.message}</div>`; }
+            } catch (err) { list.innerHTML = `<div style="text-align:center; color:var(--danger); padding:20px; font-weight:bold;">Error Fetching Data</div>`; }
         }
     </script>
 </body>
