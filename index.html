@@ -76,17 +76,55 @@
 
     <!-- 2. Inisialisasi Supabase dan Logic Aplikasi -->
     <script>
-        // INISIALISASI SUPABASE DENGAN KEY ANDA
+        // INISIALISASI SUPABASE
         const SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // LOGIC LOGIN SEMENTARA (Bypass untuk testing)
-        document.getElementById('login-form').addEventListener('submit', (e) => {
+        // CEK SESI LOGIN SAAT HALAMAN DIBUKA
+        async function checkUser() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                // Jika sudah login, langsung ke dashboard
+                document.getElementById('login-screen').classList.remove('active');
+                document.getElementById('app-screen').classList.add('active');
+                loadCustomers();
+            }
+        }
+        checkUser();
+
+        // LOGIC LOGIN ASLI (SUPABASE AUTH)
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            document.getElementById('login-screen').classList.remove('active');
-            document.getElementById('app-screen').classList.add('active');
-            loadCustomers(); // Load data pelanggan setelah login
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = e.target.querySelector('button');
+            
+            btn.innerText = 'MEMUAT...';
+            btn.disabled = true;
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert('Gagal Login: Email atau Password salah!');
+                btn.innerText = 'LOGIN';
+                btn.disabled = false;
+            } else {
+                // Login Berhasil
+                document.getElementById('login-screen').classList.remove('active');
+                document.getElementById('app-screen').classList.add('active');
+                loadCustomers();
+            }
+        });
+
+        // LOGIC LOGOUT
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.reload(); // Refresh halaman kembali ke form login
         });
 
         // LOGIC NAVIGASI BAWAH
@@ -102,10 +140,10 @@
             });
         });
 
-        // LOGIC AMBIL DATA PELANGGAN DARI SUPABASE
+        // LOGIC AMBIL DATA PELANGGAN
         async function loadCustomers() {
             const list = document.getElementById('customer-list');
-            list.innerHTML = 'Memuat data dari Supabase...';
+            list.innerHTML = 'Memuat data...';
 
             const { data: customers, error } = await supabase
                 .from('customers')
@@ -114,12 +152,13 @@
 
             if (error) {
                 console.error(error);
-                list.innerHTML = `<div style="color:red; font-size:12px;">Error: ${error.message} <br>(Pastikan Anda sudah menjalankan SQL Schema di Supabase)</div>`;
+                list.innerHTML = `<div style="color:red; font-size:12px;">Error: ${error.message}</div>`;
                 return;
             }
 
             if (customers.length === 0) {
                 list.innerHTML = '<div style="text-align:center; padding:20px; font-size:14px;">Belum ada data pelanggan.</div>';
+                document.getElementById('stat-total').innerText = 0;
                 return;
             }
 
@@ -137,7 +176,6 @@
                 `;
             });
             
-            // Update Dashboard Stats
             document.getElementById('stat-total').innerText = customers.length;
         }
     </script>
