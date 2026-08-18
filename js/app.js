@@ -8,7 +8,7 @@ let globalPayments = [];
 let globalPackages = [];
 let activeCust = null;
 let currentBillingFilter = 'semua';
-let currentCustomerFilter = 'semua'; // Filter khusus halaman pelanggan
+let currentCustomerFilter = 'semua'; 
 
 // AUTO LOGIN & AUTH
 document.addEventListener("DOMContentLoaded", () => {
@@ -71,7 +71,6 @@ async function initData() {
         await Promise.all([loadCustomers(), loadPayments()]);
         calcDashboard();
         
-        // Panggil filter pelanggan supaya label status di-refresh
         let term = document.getElementById('search-customer').value.toLowerCase();
         let data = globalCustomers.filter(c => String(c.name || '').toLowerCase().includes(term) || String(c.phone || '').includes(term));
         renderCustomerList(data);
@@ -79,6 +78,13 @@ async function initData() {
 }
 
 const formatRp = (angka) => "Rp " + (Number(angka) || 0).toLocaleString('id-ID');
+
+// FUNGSI HELPER: TARIK HARGA (MANUAL ATAU DEFAULT PAKET)
+function getCustPrice(cust) {
+    if(cust.harga && Number(cust.harga) > 0) return Number(cust.harga);
+    if(cust.packages && cust.packages.price) return Number(cust.packages.price);
+    return 0;
+}
 
 // MENGAMBIL DAFTAR PAKET
 async function loadPackages() {
@@ -90,13 +96,20 @@ async function loadPackages() {
     if(selectEl) {
         selectEl.innerHTML = '<option value="">-- Pilih Paket Internet --</option>';
         globalPackages.forEach(p => {
-            selectEl.innerHTML += `<option value="${p.id}">${p.ppp_profile} — ${formatRp(p.price)}</option>`;
+            selectEl.innerHTML += `<option value="${p.id}">${p.ppp_profile} — (Def: ${formatRp(p.price)})</option>`;
         });
     }
 }
 
+// Otomatis isi harga saat pilih paket (Tapi tetap bisa diedit manual)
+document.getElementById('cust-package-id')?.addEventListener('change', function(e) {
+    let pkg = globalPackages.find(p => p.id === e.target.value);
+    if(pkg) document.getElementById('cust-price').value = pkg.price;
+});
+
 // MENGAMBIL PELANGGAN
 async function loadCustomers() {
+    // Ambil juga kolom "harga" dari tabel customers
     let { data, error } = await db.from('customers').select('*, packages(ppp_profile, price)').order('created_at', { ascending: false });
     if(error) console.error("Error Customers:", error);
     globalCustomers = data || [];
@@ -109,7 +122,6 @@ async function loadPayments() {
     globalPayments = data || [];
 }
 
-// 🚀 FILTER HALAMAN PELANGGAN (LUNAS / BELUM BAYAR / SEMUA)
 function filterCustomer(type, el) {
     currentCustomerFilter = type;
     document.querySelectorAll('#view-customers .chip').forEach(c => c.classList.remove('active'));
@@ -120,7 +132,7 @@ function filterCustomer(type, el) {
     renderCustomerList(data);
 }
 
-// RENDER CUSTOMERS (DENGAN LABEL LUNAS/BELUM BAYAR & FILTER)
+// RENDER CUSTOMERS 
 function renderCustomerList(dataToRender) {
     let list = document.getElementById('customer-list');
     list.innerHTML = '';
@@ -128,7 +140,6 @@ function renderCustomerList(dataToRender) {
     let d = new Date();
     let tahunBulanStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 
-    // Jalankan Filter Data
     let filteredData = dataToRender.filter(cust => {
         let isIso = cust.isolation_status === 'ISOLATED';
         let hasPaid = globalPayments.some(p => p.customer_id === cust.id && String(p.billing_period).includes(tahunBulanStr));
@@ -137,7 +148,6 @@ function renderCustomerList(dataToRender) {
         if(currentCustomerFilter === 'isolir' && !isIso) return false;
         if(currentCustomerFilter === 'lunas' && !hasPaid) return false;
         if(currentCustomerFilter === 'belum-bayar' && hasPaid) return false;
-        
         return true;
     });
 
@@ -150,9 +160,8 @@ function renderCustomerList(dataToRender) {
         if(safeName.length > 1) avatar += safeName.charAt(1).toUpperCase();
         
         let packName = cust.packages ? cust.packages.ppp_profile : '-';
-        let packPrice = cust.packages ? cust.packages.price : 0;
+        let packPrice = getCustPrice(cust); // Pakai fungsi helper
 
-        // Label Tagihan Bulan Ini
         let payBadge = hasPaid 
             ? `<span style="font-size:10px; font-weight:800; color:var(--success); background:var(--cyan-light); padding:3px 8px; border-radius:6px; margin-top:5px; display:inline-block;">✓ LUNAS</span>`
             : `<span style="font-size:10px; font-weight:800; color:var(--danger); background:var(--danger-light); padding:3px 8px; border-radius:6px; margin-top:5px; display:inline-block;">! BELUM BAYAR</span>`;
@@ -196,7 +205,7 @@ function calcDashboard() {
         c.isolation_status === 'ISOLATED' ? tIso++ : tAct++;
         let hasPaid = globalPayments.some(p => p.customer_id === c.id && String(p.billing_period).includes(tahunBulanStr));
         if(!hasPaid) { 
-            outstanding += (Number(c.packages?.price) || 0); 
+            outstanding += getCustPrice(c); 
             unpaidCount++; 
         }
     });
@@ -258,7 +267,7 @@ function renderInvoiceList() {
         let curBulanStr = d.toLocaleString('id-ID', {month:'long', year:'numeric'});
         let invNo = "INV-" + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + "-" + String(cust.customer_code).replace('CUST-','');
         let packName = cust.packages?.ppp_profile || '-';
-        let packPrice = cust.packages?.price || 0;
+        let packPrice = getCustPrice(cust);
 
         let waMsg = `Halo *${cust.name || 'Pelanggan'}*,\n\nTagihan internet *${packName}* Anda untuk periode *${curBulanStr}* telah terbit.\n\n💰 *Total: ${formatRp(packPrice)}*\n📅 Jatuh tempo: tgl *${cust.due_date || '-'}*\nNo. Invoice: *${invNo}*\n\nSilakan lakukan pembayaran sebelum tanggal jatuh tempo untuk menghindari pemutusan layanan.\n\nTerima kasih 🙏`;
 
@@ -288,7 +297,7 @@ function openDetail(id) {
     let isIso = activeCust.isolation_status === 'ISOLATED';
     let safeName = String(activeCust.name || 'User');
     let packName = activeCust.packages?.ppp_profile || '-';
-    let packPrice = activeCust.packages?.price || 0;
+    let packPrice = getCustPrice(activeCust);
     
     document.getElementById('det-name').innerText = safeName;
     document.getElementById('det-avatar').innerText = safeName.charAt(0).toUpperCase();
@@ -324,33 +333,77 @@ function openDetail(id) {
     document.getElementById('preview-nota').innerText = notaMsg;
 
     document.querySelectorAll('.s-tab')[0].click();
+    
+    // Reset transform swipe sebelum dibuka
+    document.getElementById('swipeable-sheet').style.transform = '';
     document.getElementById('detail-sheet').classList.add('active');
 }
 
 function closeDetailScreen() { 
     document.getElementById('detail-sheet').classList.remove('active'); 
+    document.getElementById('swipeable-sheet').style.transform = '';
     activeCust = null; 
 }
 
-// 🚀 FUNGSI BARU: HAPUS PELANGGAN (AMAN DARI ERROR CONSTRAINT)
+// ==========================================
+// 🚀 FITUR BARU: SWIPE DOWN TO CLOSE (NATIVE APP FEEL)
+// ==========================================
+let sheetContent = document.getElementById('swipeable-sheet');
+let startY = 0;
+let currentY = 0;
+let isDragging = false;
+
+sheetContent.addEventListener('touchstart', (e) => {
+    // Jangan izinkan swipe kalau lagi nge-scroll isi konten (kecuali scrollnya udah mentok atas)
+    let contentDiv = e.target.closest('.sheet-content');
+    if(contentDiv && contentDiv.scrollTop > 0) return; 
+    
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    sheetContent.style.transition = 'none'; // Matikan animasi biar nempel sama jari
+}, {passive: true});
+
+sheetContent.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    let deltaY = currentY - startY;
+    
+    // Hanya bisa ditarik ke Bawah
+    if (deltaY > 0) {
+        sheetContent.style.transform = `translateY(${deltaY}px)`;
+    }
+}, {passive: true});
+
+sheetContent.addEventListener('touchend', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    sheetContent.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1)';
+    
+    let deltaY = currentY - startY;
+    if (deltaY > 150) { // Kalau ditariknya cukup jauh ke bawah, TUTUP!
+        closeDetailScreen();
+    } else { // Kalau nanggung, pantulkan balik ke atas
+        sheetContent.style.transform = ''; 
+    }
+});
+// ==========================================
+
+
 async function hapusPelanggan() {
     if(!activeCust) return;
     let confirmDelete = confirm(`⚠️ PERINGATAN!\n\nApakah bos yakin ingin MENGHAPUS pelanggan bernama ${activeCust.name} secara permanen?\n\nSemua riwayat tagihannya juga akan terhapus.`);
     if(!confirmDelete) return;
 
     let idToDelete = activeCust.id;
-    closeDetailScreen(); // Tutup layar duluan
+    closeDetailScreen(); 
 
     try {
-        // 1. Hapus riwayat pembayaran dulu supaya Supabase tidak marah
         await db.from('payments').delete().eq('customer_id', idToDelete);
-        
-        // 2. Baru hapus pelanggan utamanya
         const { error } = await db.from('customers').delete().eq('id', idToDelete);
         if (error) throw error;
 
         alert("✅ Pelanggan berhasil dihapus permanen!");
-        initData(); // Reload seluruh sistem
+        initData(); 
     } catch(err) {
         alert("❌ Gagal menghapus pelanggan!\nDetail: " + err.message);
     }
@@ -385,6 +438,9 @@ function openEditModal() {
     document.getElementById('cust-pass').value = activeCust.pppoe_password || "";
     document.getElementById('cust-due').value = activeCust.due_date || "";
     
+    // Tarik Harga Manual
+    document.getElementById('cust-price').value = getCustPrice(activeCust);
+    
     closeDetailScreen(); 
     openModal('modal-form');
 }
@@ -398,6 +454,7 @@ document.getElementById('customer-form').addEventListener('submit', async (e) =>
         phone: document.getElementById('cust-phone').value,
         address: document.getElementById('cust-address').value,
         package_id: document.getElementById('cust-package-id').value, 
+        harga: parseInt(document.getElementById('cust-price').value), // INI HARGA MANUALNYA BOS
         pppoe_username: document.getElementById('cust-user').value,
         pppoe_password: document.getElementById('cust-pass').value,
         due_date: parseInt(document.getElementById('cust-due').value)
@@ -439,7 +496,7 @@ function bukaModalBayar() {
     
     let idToPay = activeCust.id;
     let nameToPay = activeCust.name + " — " + (activeCust.packages?.ppp_profile || '');
-    let amountToPay = activeCust.packages?.price || 0;
+    let amountToPay = getCustPrice(activeCust);
 
     closeDetailScreen();
 
@@ -450,7 +507,6 @@ function bukaModalBayar() {
     openModal('modal-pay');
 }
 
-// PROSES PEMBAYARAN
 async function prosesPembayaran() {
     let btn = document.getElementById('btn-confirm-pay');
     btn.innerText = "MEMPROSES...";
