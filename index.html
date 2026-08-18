@@ -122,24 +122,30 @@
     </div>
 
     <script>
-        // 1. SUPABASE INIT (Gunakan Key Anda)
-        const SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ==========================================
+        // FIX: MENGGUNAKAN 'var' AGAR TIDAK ERROR BENTROK
+        // ==========================================
+        var SUPABASE_URL = 'https://ufvwxdjpmetpvogtvnxj.supabase.co';
+        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdnd4ZGpwbWV0cHZvZ3R2bnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNzY2MjMsImV4cCI6MjEwMTY1MjYyM30.xLjQZ23oUEPvatUsKXYq-xzavbc5VoMJGZglgcpEGKU';
+        
+        // Cek jika supabase belum dideklarasi untuk amankan dari error
+        if (typeof window.supabaseClient === 'undefined') {
+            window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+        var db = window.supabaseClient;
 
-        // 2. LOGIC LOGIN MANUAL
-        const USERNAME_VALID = "admin123"; 
+        // LOGIC LOGIN MANUAL
+        var USERNAME_VALID = "admin123"; 
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const inputUsername = document.getElementById('username').value;
-            const pesanError = document.getElementById('pesan-error');
+            var inputUsername = document.getElementById('username').value;
+            var pesanError = document.getElementById('pesan-error');
             
             if (inputUsername === USERNAME_VALID) {
                 document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('app-screen').classList.add('active');
                 pesanError.style.display = 'none';
                 
-                // Jalankan fungsi ambil data setelah berhasil login
                 loadCustomers(); 
             } else {
                 pesanError.innerText = 'Username salah bos!';
@@ -151,71 +157,66 @@
             window.location.reload(); 
         });
 
-        // 3. LOGIC NAVIGASI BAWAH
-        document.querySelectorAll('.nav-item').forEach(button => {
-            button.addEventListener('click', (e) => {
-                // Hapus semua class active
-                document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-                document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+        // LOGIC NAVIGASI BAWAH
+        document.querySelectorAll('.nav-item').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                document.querySelectorAll('.nav-item').forEach(function(btn) { btn.classList.remove('active'); });
+                document.querySelectorAll('.view').forEach(function(view) { view.classList.remove('active'); });
                 
-                // Tambahkan class active ke tombol yang diklik
-                const targetBtn = button.closest('.nav-item');
+                var targetBtn = button.closest('.nav-item');
                 targetBtn.classList.add('active');
                 
-                // Tampilkan view yang sesuai
-                const targetViewId = targetBtn.dataset.target;
+                var targetViewId = targetBtn.dataset.target;
                 document.getElementById(targetViewId).classList.add('active');
                 
-                // Ubah judul header
                 document.getElementById('page-title').innerText = targetBtn.dataset.title;
             });
         });
 
-        // 4. LOAD DATA PELANGGAN DARI SUPABASE
+        // LOAD DATA PELANGGAN DARI SUPABASE
         async function loadCustomers() {
-            const list = document.getElementById('customer-list');
+            var list = document.getElementById('customer-list');
             list.innerHTML = '<p style="text-align:center; color:gray; padding:20px;">Memuat data dari Supabase...</p>';
 
-            // Ambil data pelanggan
-            const { data: customers, error } = await supabase
-                .from('customers')
-                .select('*')
-                .order('created_at', { ascending: false });
+            try {
+                var { data: customers, error } = await db
+                    .from('customers')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            if (error) {
-                list.innerHTML = `<div style="color:red; font-size:12px; background:#fee2e2; padding:10px; border-radius:8px;"><b>Error Supabase:</b> ${error.message} <br><br><i>(Baca panduan di bawah untuk mengatasi ini)</i></div>`;
-                return;
-            }
+                if (error) throw error;
 
-            if (!customers || customers.length === 0) {
-                list.innerHTML = '<div style="text-align:center; padding:20px; font-size:14px; color:gray;">Belum ada data pelanggan di database.</div>';
-                document.getElementById('stat-total').innerText = 0;
-                document.getElementById('stat-active').innerText = 0;
-                return;
-            }
+                if (!customers || customers.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; padding:20px; font-size:14px; color:gray;">Belum ada data pelanggan di database.</div>';
+                    document.getElementById('stat-total').innerText = 0;
+                    document.getElementById('stat-active').innerText = 0;
+                    return;
+                }
 
-            // Render list pelanggan jika ada datanya
-            list.innerHTML = '';
-            let totalActive = 0;
+                list.innerHTML = '';
+                var totalActive = 0;
 
-            customers.forEach(cust => {
-                if(cust.connection_status === 'ACTIVE') totalActive++;
-                
-                let statusColor = cust.isolation_status === 'ISOLATED' ? 'red' : 'green';
-                list.innerHTML += `
-                    <div class="customer-card">
-                        <div>
-                            <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
-                            <small style="color: gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
-                            <small style="color: ${statusColor}; font-weight: bold;">● ${cust.isolation_status}</small>
+                customers.forEach(function(cust) {
+                    if(cust.connection_status === 'ACTIVE') totalActive++;
+                    
+                    var statusColor = cust.isolation_status === 'ISOLATED' ? 'red' : 'green';
+                    list.innerHTML += `
+                        <div class="customer-card">
+                            <div>
+                                <h4 style="margin-bottom: 4px; font-size:15px;">${cust.name}</h4>
+                                <small style="color: gray;">${cust.customer_code} | PPPoE: ${cust.pppoe_username}</small><br>
+                                <small style="color: ${statusColor}; font-weight: bold;">● ${cust.isolation_status}</small>
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
-            
-            // Update Dashboard Stats
-            document.getElementById('stat-total').innerText = customers.length;
-            document.getElementById('stat-active').innerText = totalActive;
+                    `;
+                });
+                
+                document.getElementById('stat-total').innerText = customers.length;
+                document.getElementById('stat-active').innerText = totalActive;
+
+            } catch (err) {
+                list.innerHTML = `<div style="color:red; font-size:12px; background:#fee2e2; padding:10px; border-radius:8px;"><b>Error Supabase:</b> ${err.message} <br><br><i>(Pastikan Anda sudah menjalankan SQL Policy di Supabase agar data bisa dibaca publik)</i></div>`;
+            }
         }
     </script>
 </body>
