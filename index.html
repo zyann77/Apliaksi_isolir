@@ -239,7 +239,7 @@
         </div>
     </div>
 
-    <!-- Payment Confirmation -->
+    <!-- Payment Confirmation (TIDAK LAGI PAKAI FORM BIAR GAK MENTAL) -->
     <div id="modal-pay" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; margin-bottom:20px;">
@@ -248,11 +248,11 @@
             </div>
             <p id="pay-cust-name" style="font-weight:600; color:var(--text-muted); margin-bottom:20px; text-align:center;">-</p>
             
-            <form id="payment-form">
+            <div id="payment-form">
                 <input type="hidden" id="pay-id">
                 <div class="sheet-card" style="margin-bottom:20px; text-align:center; background:#f8fafc;">
                     <span class="data-label">Total Pembayaran</span>
-                    <input type="number" id="pay-amount" style="background:transparent; border:none; text-align:center; font-size:28px; font-weight:800; color:var(--navy); width:100%; outline:none;" readonly required>
+                    <input type="number" id="pay-amount" style="background:transparent; border:none; text-align:center; font-size:28px; font-weight:800; color:var(--navy); width:100%; outline:none;" readonly>
                 </div>
 
                 <div class="section-title">METODE PEMBAYARAN</div>
@@ -262,11 +262,12 @@
                     <option value="QRIS">QRIS</option>
                 </select>
                 
-                <button type="submit" class="btn-primary" style="background:var(--navy);">CONFIRM PAYMENT</button>
-            </form>
+                <button type="button" id="btn-confirm-pay" class="btn-primary" style="background:var(--navy);" onclick="prosesPembayaran()">CONFIRM PAYMENT</button>
+            </div>
         </div>
     </div>
 
-    <script src="js/app.js?v=gass100"></script>
+    <!-- PERHATIKAN INI BOS! Ini yang membuat Cache terhapus paksa -->
+    <script src="js/app.js?v=anti_mental_100"></script>
 </body>
 </html>
