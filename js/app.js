@@ -79,7 +79,6 @@ async function initData() {
 
 const formatRp = (angka) => "Rp " + (Number(angka) || 0).toLocaleString('id-ID');
 
-// FUNGSI HELPER: TARIK HARGA (MANUAL ATAU DEFAULT PAKET)
 function getCustPrice(cust) {
     if(cust.harga && Number(cust.harga) > 0) return Number(cust.harga);
     if(cust.packages && cust.packages.price) return Number(cust.packages.price);
@@ -96,11 +95,15 @@ async function loadPackages() {
     if(selectEl) {
         selectEl.innerHTML = '<option value="">-- Pilih Paket Internet --</option>';
         globalPackages.forEach(p => {
-            // 🔥 DI SINI BAGIAN YANG DIHAPUS (HANYA MENAMPILKAN NAMA PAKET) 🔥
             selectEl.innerHTML += `<option value="${p.id}">${p.ppp_profile}</option>`;
         });
     }
 }
+
+document.getElementById('cust-package-id')?.addEventListener('change', function(e) {
+    let pkg = globalPackages.find(p => p.id === e.target.value);
+    if(pkg) document.getElementById('cust-price').value = pkg.price;
+});
 
 // MENGAMBIL PELANGGAN
 async function loadCustomers() {
@@ -293,11 +296,17 @@ function openDetail(id) {
     let packName = activeCust.packages?.ppp_profile || '-';
     let packPrice = getCustPrice(activeCust);
     
+    // Cek Pembayaran Bulan Ini
+    let d = new Date();
+    let tahunBulanStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    let hasPaid = globalPayments.some(p => p.customer_id === activeCust.id && String(p.billing_period).includes(tahunBulanStr));
+
     document.getElementById('det-name').innerText = safeName;
     document.getElementById('det-avatar').innerText = safeName.charAt(0).toUpperCase();
     document.getElementById('det-status-badge').innerText = isIso ? "ISOLATED" : "ONLINE";
     document.getElementById('det-status-badge').className = isIso ? "id-badge isolated" : "id-badge";
 
+    // INFO DATA UMUM
     document.getElementById('det-code').innerText = activeCust.customer_code || '-';
     document.getElementById('det-pppoe').innerText = activeCust.pppoe_username || '-';
     document.getElementById('det-reg').innerText = activeCust.installation_date || new Date().toISOString().split('T')[0];
@@ -305,6 +314,11 @@ function openDetail(id) {
     document.getElementById('det-address').innerText = activeCust.address || "Belum ada data alamat.";
     document.getElementById('det-pack').innerText = packName;
     document.getElementById('det-price').innerText = formatRp(packPrice);
+
+    // 🚀 INFO MIKROTIK (Kosong sebelum API dicolokkan)
+    document.getElementById('det-uptime').innerText = activeCust.uptime || '-';
+    document.getElementById('det-remote').innerText = activeCust.remote_address || '-';
+    document.getElementById('det-logout').innerText = activeCust.last_logout || '-';
 
     let btnAct = document.getElementById('btn-det-action');
     if(isIso) {
@@ -317,12 +331,20 @@ function openDetail(id) {
         btnAct.onclick = () => eksekusiMikrotik(activeCust.id, activeCust.pppoe_username, true);
     }
 
-    let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
-    let invNo = "INV-" + new Date().getFullYear() + String(new Date().getMonth()+1).padStart(2,'0') + "-" + String(activeCust.customer_code).replace('CUST-','');
-    
-    let invMsg = `Halo *${safeName}*,\n\nTagihan internet *${packName}* Anda untuk periode *${curBulanStr}* telah terbit.\n\n💰 *Total: ${formatRp(packPrice)}*\n📅 Jatuh tempo: tgl *${activeCust.due_date || '-'}*\nNo. Invoice: *${invNo}*\n\nSilakan lakukan pembayaran sebelum tanggal jatuh tempo untuk menghindari pemutusan layanan.\n\nTerima kasih 🙏`;
-    document.getElementById('preview-invoice').innerText = invMsg;
+    // 🚀 LOGIKA SEMBUNYIKAN TOMBOL BAYAR JIKA SUDAH LUNAS
+    if (hasPaid) {
+        document.getElementById('btn-pay-lunas').style.display = 'none'; // Sembunyikan Tombol
+        document.getElementById('preview-invoice').innerText = "✅ Tagihan bulan ini sudah dilunasi. Tidak perlu ditagih.";
+    } else {
+        document.getElementById('btn-pay-lunas').style.display = 'block'; // Tampilkan Tombol
+        
+        let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
+        let invNo = "INV-" + new Date().getFullYear() + String(new Date().getMonth()+1).padStart(2,'0') + "-" + String(activeCust.customer_code).replace('CUST-','');
+        let invMsg = `Halo *${safeName}*,\n\nTagihan internet *${packName}* Anda untuk periode *${curBulanStr}* telah terbit.\n\n💰 *Total: ${formatRp(packPrice)}*\n📅 Jatuh tempo: tgl *${activeCust.due_date || '-'}*\nNo. Invoice: *${invNo}*\n\nSilakan lakukan pembayaran sebelum tanggal jatuh tempo untuk menghindari pemutusan layanan.\n\nTerima kasih 🙏`;
+        document.getElementById('preview-invoice').innerText = invMsg;
+    }
 
+    let curBulanStr = new Date().toLocaleString('id-ID', {month:'long', year:'numeric'});
     let notaMsg = `LUNAS ✅\n\nHalo *${safeName}*,\n\nPembayaran tagihan internet *${packName}* periode *${curBulanStr}* telah kami terima.\n\n💰 *Nominal: ${formatRp(packPrice)}*\n📅 Tgl Lunas: *${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}*\n\nTerima kasih atas pembayaran Anda! 🙏`;
     document.getElementById('preview-nota').innerText = notaMsg;
 
